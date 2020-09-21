@@ -13,6 +13,10 @@ CHIP HalfAdder {
         carry;  // Left bit of a + b
 
     PARTS:
-    Xor (a=a, b=b, out=sum);  // Four Nand gates (as per the built-in implementation)
-    And (a=a, b=b, out=carry);  // Two Nand gates
+    Nand (a=a, b=b, out=aNandB);
+    Nand (a=a, b=aNandB, out=a2NandB);
+    Nand (a=aNandB, b=b, out=aNandB2);
+    Nand (a=a2NandB, b=aNandB2, out=sum);
+
+    Not (in=aNandB, out=carry);
 }
