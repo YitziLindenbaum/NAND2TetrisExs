@@ -42,6 +42,30 @@ CHIP ALU {
         ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
+    // ZX
     Not (in=zx, out=notZX);
-    And16 (a=notZX, b=x, out=x);
+    And16 (a=x, b[0]=notZX, b[1]=notZX, b[2]=notZX, b[3]=notZX, b[4]=notZX, b[5]=notZX, b[6]=notZX, b[7]=notZX, b[8]=notZX, b[9]=notZX, b[10]=notZX, b[11]=notZX, b[12]=notZX, b[13]=notZX, b[14]=notZX, b[15]=notZX, out=zeroX);
+
+    // ZY
+    Not (in=zy, out=notZY);
+    And16 (a=y, b[0]=notZY, b[1]=notZY, b[2]=notZY, b[3]=notZY, b[4]=notZY, b[5]=notZY, b[6]=notZY, b[7]=notZY, b[8]=notZY, b[9]=notZY, b[10]=notZY, b[11]=notZY, b[12]=notZY, b[13]=notZY, b[14]=notZY, b[15]=notZY, out=zeroY);
+
+    // NX
+    Xor16 (a=zeroX, b[0]=nx, b[1]=nx, b[2]=nx, b[3]=nx, b[4]=nx, b[5]=nx, b[6]=nx, b[7]=nx, b[8]=nx, b[9]=nx, b[10]=nx, b[11]=nx, b[12]=nx, b[13]=nx, b[14]=nx, b[15]=nx, out=newX);
+
+    // NY
+    Xor16 (a=zeroY, b[0]=ny, b[1]=ny, b[2]=ny, b[3]=ny, b[4]=ny, b[5]=ny, b[6]=ny, b[7]=ny, b[8]=ny, b[9]=ny, b[10]=ny, b[11]=ny, b[12]=ny, b[13]=ny, b[14]=ny, b[15]=ny, out=newY);
+
+    // F
+    Add16 (a=newX, b=newY, out=xPlusY);
+    And16 (a=newX, b=newY, out=xAndY);
+
+    Not (in=f, out=notF);
+    And16 (a=xPlusY, b[0]=f, b[1]=f, b[2]=f, b[3]=f, b[4]=f, b[5]=f, b[6]=f, b[7]=f, b[8]=f, b[9]=f, b[10]=f, b[11]=f, b[12]=f, b[13]=f, b[14]=f, b[15]=f, out=fXPlusY);
+    And16 (a=xAndY, b[0]=notF, b[1]=notF, b[2]=notF, b[3]=notF, b[4]=notF, b[5]=notF, b[6]=notF, b[7]=notF, b[8]=notF, b[9]=notF, b[10]=notF, b[11]=notF, b[12]=notF, b[13]=notF, b[14]=notF, b[15]=notF, out=fXAndY);
+
+    Or16 (a=fXPlusY, b=fXAndY, out=fOut);
+
+    // NO
+    Xor16 (a=fOut, b[0]=no, b[1]=no, b[2]=no, b[3]=no, b[4]=no, b[5]=no, b[6]=no, b[7]=no, b[8]=no, b[9]=no, b[10]=no, b[11]=no, b[12]=no, b[13]=no, b[14]=no, b[15]=no, out=out);
 }
