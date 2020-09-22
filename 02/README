@@ -1,0 +1,22 @@
+bschreiber91
+===============================================================================
+Benyamin Schreiber, ID 888800638, benyamin.schreiber@mail.huji.ac.il
+===============================================================================
+
+                           Project 02 - An ALU Chip
+                           -----------------------
+
+
+Submitted Files
+---------------
+README - This file.
+Add16.hdl - Adds two 16-bit binary numbers together
+ALU.hdl - Implements a 6-bit control input ALU chip
+EqualsZero16.hdl - Determines if a 16-bit chip is equal to zero
+FullAdder.hdl - Adds three bits together
+HaldAdder.hdl - Adds two bits together
+Inc16.hdl - Increments a 16-bit number by 1
+Xor16.hdl - Xors two 16-bit numbers together two (one from each input number) bits at a time
+
+Remarks
+-------

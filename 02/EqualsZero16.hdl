@@ -2,7 +2,7 @@
  * out == 1 iff x == 0
  */
 
-CHIP EqualsZero {
+CHIP EqualsZero16 {
     IN
         x[16];
     OUT
