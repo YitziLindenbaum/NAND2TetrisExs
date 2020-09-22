@@ -1,0 +1,28 @@
+/**
+ * out == 1 iff x == 0
+ */
+
+CHIP EqualsZero {
+    IN
+        x[16];
+    OUT
+        out;  // One bit output
+    PARTS:
+    Or (a=x[0], b=x[1], out=zeroOne);
+    Or (a=zeroOne, b=x[2], out=two);
+    Or (a=two, b=x[3], out=three);
+    Or (a=three, b=x[4], out=four);
+    Or (a=four, b=x[5], out=five);
+    Or (a=five, b=x[6], out=six);
+    Or (a=six, b=x[7], out=seven);
+    Or (a=seven, b=x[8], out=eight);
+    Or (a=eight, b=x[9], out=nine);
+    Or (a=nine, b=x[10], out=ten);
+    Or (a=ten, b=x[11], out=eleven);
+    Or (a=eleven, b=x[12], out=twelve);
+    Or (a=twelve, b=x[13], out=thirteen);
+    Or (a=thirteen, b=x[14], out=fourteen);
+    Or (a=fourteen, b=x[15], out=fifteen);
+
+    Not (in=fifteen, out=out);
+}
