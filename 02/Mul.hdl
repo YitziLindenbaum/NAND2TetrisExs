@@ -3,5 +3,38 @@ CHIP Mul{
     OUT out[16];
 
     PARTS:
+    OneBitMul (a=a, b=b[0], out=AB0);
+    OneBitMul (a=a, b=b[1], out[0..13]=AB1013, out[14]=AB114, out[15]=AB115);
+    OneBitMul (a=a, b=b[2], out[0..12]=AB2012, out[13..14]=AB21314, out[15]=AB215);
+    OneBitMul (a=a, b=b[3], out[0..11]=AB3011, out[12..14]=AB31214, out[15]=AB315);
+    OneBitMul (a=a, b=b[4], out[0..10]=AB4010, out[11..14]=AB41114, out[15]=AB415);
+    OneBitMul (a=a, b=b[5], out[0..9]=AB509, out[10..14]=AB51014, out[15]=AB515);
+    OneBitMul (a=a, b=b[6], out[0..8]=AB608, out[9..14]=AB6914, out[15]=AB615);
+    OneBitMul (a=a, b=b[7], out[0..7]=AB707, out[8..14]=AB7814, out[15]=AB715);
+    OneBitMul (a=a, b=b[8], out[0..6]=AB806, out[7..14]=AB8714, out[15]=AB815);
+    OneBitMul (a=a, b=b[9], out[0..5]=AB905, out[6..14]=AB9614, out[15]=AB915);
+    OneBitMul (a=a, b=b[10], out[0..4]=AB1004, out[5..14]=AB10514, out[15]=AB1015);
+    OneBitMul (a=a, b=b[11], out[0..3]=AB1103, out[4..14]=AB11414, out[15]=AB1115);
+    OneBitMul (a=a, b=b[12], out[0..2]=AB1202, out[3..14]=AB12314, out[15]=AB1215);
+    OneBitMul (a=a, b=b[13], out[0..1]=AB1301, out[2..14]=AB13214, out[15]=AB1315);
+    OneBitMul (a=a, b=b[14], out[0]=AB140, out[1..14]=AB14114, out[15]=AB1415);
+    OneBitMul (a=a, b=b[15], out[0..14]=AB15014, out[15]=AB1515);
+
+    Add16 (a=AB0,  b[0]=false, b[1..14]=AB1013, b[15]=AB115, out=zeroThroughOne);
+    Add16 (a=zeroThroughOne, b[0]=false, b[1]=false, b[2..14]=AB2012, b[15]=AB215, out=zeroThroughTwo);
+    Add16 (a=zeroThroughTwo, b[0]=false, b[1]=false, b[2]=false, b[3..14]=AB3011, b[15]=AB315, out=zeroThroughThree);
+    Add16 (a=zeroThroughThree, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4..14]=AB4010, b[15]=AB415, out=zeroThroughFour);
+    Add16 (a=zeroThroughFour, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5..14]=AB509, b[15]=AB515, out=zeroThroughFive);
+    Add16 (a=zeroThroughFive, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5]=false, b[6..14]=AB608, b[15]=AB615, out=zeroThroughSix);
+    Add16 (a=zeroThroughSix,  b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5]=false, b[6]=false, b[7..14]=AB707, b[15]=AB715, out=zeroThroughSeven);
+    Add16 (a=zeroThroughSeven, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5]=false, b[6]=false, b[7]=false, b[8..14]=AB806, b[15]=AB815, out=zeroThroughEight);
+    Add16 (a=zeroThroughEight, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5]=false, b[6]=false, b[7]=false, b[8]=false, b[9..14]=AB905, b[15]=AB915, out=zeroThroughNine);
+    Add16 (a=zeroThroughNine, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5]=false, b[6]=false, b[7]=false, b[8]=false, b[9]=false, b[10..14]=AB1004, b[15]=AB1015, out=zeroThroughTen);
+    Add16 (a=zeroThroughTen, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5]=false, b[6]=false, b[7]=false, b[8]=false, b[9]=false, b[11]=false, b[11..14]=AB1103, b[15]=AB1115, out=zeroThroughEleven);
+    Add16 (a=zeroThroughEleven, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5]=false, b[6]=false, b[7]=false, b[8]=false, b[9]=false, b[10]=false, b[11]=false, b[12..14]=AB1202, b[15]=AB1215, out=zeroThroughTwelve);
+    Add16 (a=zeroThroughTwelve, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5]=false, b[6]=false, b[7]=false, b[8]=false, b[9]=false, b[10]=false, b[11]=false, b[12]=false, b[13..14]=AB1301, b[15]=AB1315, out=zeroThroughThirteen);
+    Add16 (a=zeroThroughThirteen, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5]=false, b[6]=false, b[7]=false, b[8]=false, b[9]=false, b[10]=false, b[11]=false, b[12]=false, b[13]=false, b[14]=AB140, b[15]=AB1415, out=zeroThroughFourteen);
+    Add16 (a=zeroThroughFourteen, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5]=false, b[6]=false, b[7]=false, b[8]=false, b[9]=false, b[10]=false, b[11]=false, b[12]=false, b[13]=false, b[14]=false, b[15]=AB1515, out=out);
+
 
 }
