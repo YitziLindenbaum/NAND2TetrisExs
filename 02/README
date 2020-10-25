@@ -15,8 +15,12 @@ Add16.hdl - Adds two 16-bit binary numbers together
 ALU.hdl - Implements a 6-bit control input ALU chip
 EqualsZero16.hdl - Determines if a 16-bit chip is equal to zero
 FullAdder.hdl - Adds three bits together
-HaldAdder.hdl - Adds two bits together
+HalfAdder.hdl - Adds two bits together
 Inc16.hdl - Increments a 16-bit number by 1
+Mul.hdl - Performs multiplication on two 16 bit numbers. Truncates output to 16 bits
+OneBitMul.hdl - Multiplies a 16 bit input by a single bit
+ShiftLeft.hdl - Shifts all bits (other than the MSB) left one bit
+ShiftRight.hdl - Shifts all bits (other than the MSB) right one bit
 Xor16.hdl - Xors two 16-bit numbers together two (one from each input number) bits at a time
 
 Remarks
