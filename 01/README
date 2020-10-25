@@ -17,7 +17,7 @@ DMux4Way.hdl
 DMux8Way.hdl
 Mux.hdl
 Mux4Way16.hdl
-Mux8Way16.hdl - Implements 8-way Multiplexor for 16 bit inputs
+Mux8Way16.hdl
 Mux16.hdl - Implements Multiplexor for 16 bit inputs
 Not.hdl - Implements NOT for one bit inputs
 Not16.hdl - Implements NOT for 16 bit inputs
