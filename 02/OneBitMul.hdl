@@ -1,3 +1,7 @@
+/**
+ * Multiplies the bit 'b' by every bit in 'a'
+ */
+
 CHIP OneBitMul {
     IN a[16], b;
     OUT out[16];

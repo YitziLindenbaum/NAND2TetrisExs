@@ -3,6 +3,8 @@ CHIP Mul{
     OUT out[16];
 
     PARTS:
+
+    // For each bit in b, multiply it by every bit in a
     OneBitMul (a=a, b=b[0], out=AB0);
     OneBitMul (a=a, b=b[1], out[0..13]=AB1013, out[14]=AB114, out[15]=AB115);
     OneBitMul (a=a, b=b[2], out[0..12]=AB2012, out[13..14]=AB21314, out[15]=AB215);
@@ -20,6 +22,7 @@ CHIP Mul{
     OneBitMul (a=a, b=b[14], out[0]=AB140, out[1..14]=AB14114, out[15]=AB1415);
     OneBitMul (a=a, b=b[15], out[0..14]=AB15014, out[15]=AB1515);
 
+    // Add all of the products from above together. Takes into account the necessary shifts
     Add16 (a=AB0,  b[0]=false, b[1..14]=AB1013, b[15]=AB115, out=zeroThroughOne);
     Add16 (a=zeroThroughOne, b[0]=false, b[1]=false, b[2..14]=AB2012, b[15]=AB215, out=zeroThroughTwo);
     Add16 (a=zeroThroughTwo, b[0]=false, b[1]=false, b[2]=false, b[3..14]=AB3011, b[15]=AB315, out=zeroThroughThree);
@@ -33,8 +36,5 @@ CHIP Mul{
     Add16 (a=zeroThroughTen, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5]=false, b[6]=false, b[7]=false, b[8]=false, b[9]=false, b[11]=false, b[11..14]=AB1103, b[15]=AB1115, out=zeroThroughEleven);
     Add16 (a=zeroThroughEleven, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5]=false, b[6]=false, b[7]=false, b[8]=false, b[9]=false, b[10]=false, b[11]=false, b[12..14]=AB1202, b[15]=AB1215, out=zeroThroughTwelve);
     Add16 (a=zeroThroughTwelve, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5]=false, b[6]=false, b[7]=false, b[8]=false, b[9]=false, b[10]=false, b[11]=false, b[12]=false, b[13..14]=AB1301, b[15]=AB1315, out=zeroThroughThirteen);
-    Add16 (a=zeroThroughThirteen, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5]=false, b[6]=false, b[7]=false, b[8]=false, b[9]=false, b[10]=false, b[11]=false, b[12]=false, b[13]=false, b[14]=AB140, b[15]=AB1415, out=zeroThroughFourteen);
-    Add16 (a=zeroThroughFourteen, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5]=false, b[6]=false, b[7]=false, b[8]=false, b[9]=false, b[10]=false, b[11]=false, b[12]=false, b[13]=false, b[14]=false, b[15]=AB1515, out=out);
-
-
+    Add16 (a=zeroThroughThirteen, b[0]=false, b[1]=false, b[2]=false, b[3]=false, b[4]=false, b[5]=false, b[6]=false, b[7]=false, b[8]=false, b[9]=false, b[10]=false, b[11]=false, b[12]=false, b[13]=false, b[14]=AB140, b[15]=AB1415, out=out);
 }
