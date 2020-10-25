@@ -1,23 +1,24 @@
-bschreiber91
+bschreiber91, chucklind
 ===============================================================================
 Benyamin Schreiber, ID 888800638, benyamin.schreiber@mail.huji.ac.il
+Yitzchak Lindenbaum, ID 336082789, yitzchak.lindenbaum@mail.huji.ac.il
 ===============================================================================
 
                            Project 01 - An HDL File
-                           -----------------------
-
+                           ----------------------- 
+  
 
 Submitted Files
 ---------------
 README - This file.
-And.hdl
-And16.hdl
-DMux.hdl
-DMux4Way.hdl
-DMux8Way.hdl
-Mux.hdl
-Mux4Way16.hdl
-Mux8Way16.hdl
+And.hdl - Implements And chip for 1-bit input
+And16.hdl - Implements And chip for 16-bit input
+DMux.hdl  - Implements DeMultiplexor for 2-way inputs
+DMux4Way.hdl - Implements DeMultiplexor for 4-way inputs
+DMux8Way.hdl - Implements DeMultiplexor for 8-way inputs
+Mux.hdl -
+Mux4Way16.hdl - Implements 4-way Multiplexor for 16 bit inputs
+Mux8Way16.hdl - Implements 8-way Multiplexor for 16 bit inputs
 Mux16.hdl - Implements Multiplexor for 16 bit inputs
 Not.hdl - Implements NOT for one bit inputs
 Not16.hdl - Implements NOT for 16 bit inputs
@@ -28,3 +29,4 @@ Xor.hdl - Implements XOR for one bit inputs
 
 Remarks
 -------
+
