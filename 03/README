@@ -1,0 +1,24 @@
+bschreiber91,chucklind
+===============================================================================
+Benyamin Schreiber, ID 888800638, benyamin.schreiber@mail.huji.ac.il
+Yitzchak Lindenbaum, ID 336082789, yitzchak.lindenbaum@mail.huji.ac.il
+===============================================================================
+
+                           Project 03 - Memory
+                           -----------------------
+
+
+Submitted Files
+---------------
+README - This file.
+Bit.hdl - Implements a single bit of memory.
+Register.hdl - Implements a register of 8 bits.
+RAM8.hdl - Implements RAM of 8 registers.
+RAM64.hdl - Implements RAM of 64 registers.
+RAM512.hdl - Implements RAM of 512 registers.
+RAM4K.hdl - Implements RAM of 2^12 registers.
+RAM16K.hdl - Implements RAM of 2^14 registers.
+PC.hdl - Implements a program counter.
+
+Remarks
+-------
