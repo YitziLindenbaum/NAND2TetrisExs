@@ -16,5 +16,24 @@ CHIP PC {
     OUT out[16];
 
     PARTS:
+    Register (in=incOut, load=true, out=prevRegister, out=out);
+
+    // Reset
+    Not (in=reset, out=notReset);
+    And16 (a=prevRegister, b[0]=notReset, b[1]=notReset, b[2]=notReset,
+        b[3]=notReset, b[4]=notReset, b[5]=notReset, b[6]=notReset, b[7]=notReset,
+        b[8]=notReset, b[9]=notReset, b[10]=notReset, b[11]=notReset,
+        b[12]=notReset, b[13]=notReset, b[14]=notReset, b[15]=notReset,
+        out=resetOut);
+
+    // Load
+    And (a=notReset, b=load, out=modifiedLoad);
+    Mux16 (a=resetOut, b=in, sel=modifiedLoad, out=modifiedIn);
+
+    // Increment
+    Or (a=reset, b=load, out=resetOrLoad);
+    Not (in=resetOrLoad, out=notResetOrLoad);
+    And (a=notResetOrLoad, b=inc, out=modifiedInc);
+    Add16 (a=modifiedIn, b[0]=modifiedInc, b[1..15]=false, out=incOut);
 
 }
