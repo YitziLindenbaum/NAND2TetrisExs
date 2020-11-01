@@ -11,9 +11,10 @@ Yitzchak Lindenbaum, ID 336082789, yitzchak.lindenbaum@mail.huji.ac.il
 Submitted Files
 ---------------
 README - This file.
-divide/Divide.asm -
-fill/Fill.asm -
-mult/Mult.asm -
+divide/Divide.asm - Implements assembly program to divide two numbers
+fill/Fill.asm - Implements assembly program that fills screen when any key is
+                pressed.
+mult/Mult.asm - Implements assembly program to multiply two numbers.
 sort/Sort.asm -
 
 Remarks

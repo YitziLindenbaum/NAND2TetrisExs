@@ -14,12 +14,12 @@
 // Put your code here.
 
 //while true:
-//    if KBD == 0:
-//        for cur in [SCREEN...SCREEN + 8191]:
-//            cur = 0
+//    if KBD != 0:
+//        for addr in [SCREEN...SCREEN + 8191]:
+//            RAM[addr] = -1 (1111... in binary)
 //    else:
-//        for cur in [SCREEN...SCREEN + 8191]:
-//            cur = -1
+//        for addr in [SCREEN...SCREEN + 8191]:
+//            RAM[addr] = 0 (0000... in binary)
 
 (START)
 
