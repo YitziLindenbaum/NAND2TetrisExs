@@ -43,13 +43,13 @@ M=D  //  R0 = temp
 
 (INIT_LOOP)
     @R2
-    M=0
+    M=0 // Init R2 to 0
     @R1
     D=M
     @END
-    D;JEQ
+    D;JEQ // If R1 == 0: Skip to end; product will be zero
     @counter
-    M=1
+    M=1 // Init counter to 1
 
 (LOOP)
     @R0
