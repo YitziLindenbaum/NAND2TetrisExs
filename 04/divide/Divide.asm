@@ -42,12 +42,12 @@ M=D  // Set i to 15 (the number of bits in RAM[13])
     @shifted
     M=D // Store the value of RAM[13] in 'shifted'
 
-(SHIFT_R13_LOOP)
     @i
     D=M
     @LOOP_CONT
-    D; JEQ //
+    D; JEQ // Check to see if i=0
 
+(SHIFT_R13_LOOP)
     @shifted
     M=M>> // Shift the value 'shifted' right by one bit
 
