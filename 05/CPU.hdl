@@ -39,13 +39,29 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    Mux16 (a=aluOutput, b=instruction, sel=instruction[15], out=muxInstructionOut);
-    ARegister (in=muxInstructionOut, load=true, out=aRegisterOut, out=addressM);
+    Mux16 (a=instruction, b=aluOutput, sel=instruction[15], out=muxInstructionOut);
+    Not (in=instruction[15], out=notFirstBit);
+    And (a=instruction[5], b=instruction[15], out=firstBitAndLoadBit);
+    Or (a=notFirstBit, b=firstBitAndLoadBit, out=aRegisterLoad);
+    ARegister (in=muxInstructionOut, load=aRegisterLoad, out=aRegisterOut, out[0..14]=addressM);
 
-    DRegister (in=aluOutput, load=true, out=dRegisterOut);
-    Mux16 (a=aRegisterOut, b=inM, sel=instruction[12], out=muxARegisterOut);
+    And (a=instruction[4], b=instruction[15], out=dRegisterLoad);
+    DRegister (in=aluOutput, load=dRegisterLoad, out=dRegisterOut);
+    Mux16 (a=aRegisterOut, b=inM, sel=instruction[12], out=muxARegisterOut);  // Feed M into the ALU iff the a-bit == 0
 
     ALU (x=dRegisterOut, y=muxARegisterOut, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=aluOutput, out=outM, zr=zrOut, ng=ngOut);
-    Or (a=instruction[3], b=false, out=writeM);
-    PC (in=aRegisterOut, load=, inc=true, reset=reset, out[0..14]=pc);
+    And (a=instruction[3], b=instruction[15], out=writeM);
+
+    // Load bit calculation
+    And (a=instruction[2], b=ngOut, out=jumpLessThan);
+    And (a=instruction[1], b=zrOut, out=jumpEquals);
+    Not (in=ngOut, out=notNg);
+    Not (in=zrOut, out=notZr);
+    And (a=notNg, b=notZr, out=andNotNgNotZr);
+    And (a=instruction[0], b=andNotNgNotZr, out=jumpGreaterThan);
+    Or (a=jumpLessThan, b=jumpEquals, out=jumpLessThanEquals);
+    Or (a=jumpGreaterThan, b=jumpLessThanEquals, out=jump);
+    And (a=jump, b=instruction[15], out=loadJump);
+
+    PC (in=aRegisterOut, load=loadJump, inc=true, reset=reset, out[0..14]=pc);
 }
