@@ -37,6 +37,7 @@ CHIP CpuMul{
     Not(in=instruction[15], out=AIns);
     Or(a=AIns, b=instruction[5], out=loadA);
     ARegister (in=MuxA, load=loadA, out=aReg, out[0..14]=CAddressM);
+
     Mux16(a=aReg, b=inM, sel=instruction[12], out=AorM); // choose A or M
     DRegister (in=COutM, load=instruction[4], out=dReg);
     ExtendAlu(x=dReg, y=AorM, instruction=instruction[6..14], out=COutM,
