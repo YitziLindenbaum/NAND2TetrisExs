@@ -1,0 +1,22 @@
+bschreiber91,chucklind
+===============================================================================
+Benyamin Schreiber, ID 888800638, benyamin.schreiber@mail.huji.ac.il
+Yitzchak Lindenbaum, ID 336082789, yitzchak.lindenbaum@mail.huji.ac.il
+===============================================================================
+
+                           Project 05 - Computer
+                           -----------------------
+
+
+Submitted Files
+---------------
+README - This file.
+Computer.hdl - An HDL file that implements the computer chip. This chip is the main control for the Hack Computer
+CPU.hdl - An HDL file that implements the CPU chip. This chip is a basic CPU chip in the Hack Computer
+CpuMul.hdl - An HDL file that implements the CPU chip with additional functionality
+EqualsZero16.hdl - An additional chip that tests if a 16-bit input is equal to zero
+ExtendAlu.hdl - An HDL file that extends the ALU chip to include additional functionality
+Memory.hdl - An HDL file that implements the Memory chip. This chip manages the RAM, Screen, and Keyboard memory areas
+
+Remarks
+-------
