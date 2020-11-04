@@ -16,5 +16,32 @@ CHIP ExtendAlu{
      OUT out[16],zr,ng;
      
      PARTS:
-        
+
+     // Regular ALU
+     Nand(a=instruction[7], b=instruction[8], out=NotRegALU); // condition
+     ALU(x=x, y=y, zx=instruction[5], nx=instruction[4], zy=instruction[3],
+         ny=instruction[2], f=instruction[1], no=instruction[0], out=RegOut,
+         zr=RegZr, ng = RegNg); // output
+
+     // Multiplication
+     Not(in=instruction[7], out=Mult); // condition
+     Mul(a=x, b=y, out=product); // output
+
+     // Shift
+     ShiftRight(in=y, out=yShiftRight);
+     ShiftRight(in=x, out=xShiftRight);
+     ShiftLeft(in=y, out=yShiftLeft);
+     ShiftLeft(in=x, out=xShiftLeft);
+     Mux4Way16(a=yShiftRight, b=xShiftRight, c=yShiftLeft, d=xShiftLeft,
+               sel=instruction[4..5], out=shift);
+
+     // Decision 2020
+     Mux16(a=product, b=shift, sel=instruction[7], out=MultOrShift,
+           out[15]=ngMorS);
+     EqualsZero16(x=MultOrShift, out=zrMorS);
+
+     Mux16(a=RegOut, b=MultOrShift, sel=NotRegALU, out=out);
+     Mux(a=RegZr, b=zrMorS, sel=NotRegALU, out=zr);
+     Mux(a=RegNg, b=ngMorS, sel=NotRegALU, out=ng);
+
 }
