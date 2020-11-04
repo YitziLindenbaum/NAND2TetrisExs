@@ -29,5 +29,42 @@ CHIP CpuMul{
         addressM[15],    // Address in data memory (of M)
         pc[15];          // address of next instruction
 
-     PARTS:
+    PARTS:
+    // Output if C-instruction
+
+    // outM & addressM
+    ARegister(in=COutM, load=instruction[5], out=aReg, out[0..14]=CAddressM);
+    Mux16(a=aReg, b=inM, sel=instruction[12], out=AorM); // choose A or M
+    DRegister(in=COutM, load=instruction[4], out=dReg);
+    ExtendAlu(x=dReg, y=AorM, instruction=instruction[6..14], out=COutM,
+    zr=ExtZr, ng=ExtNg);
+
+    // writeM
+    And(a=instruction[3], b=instruction[3], out=CWriteM);
+
+    // Jump?
+    And (a=instruction[2], b=ExtNg, out=jumpLessThan);
+    And (a=instruction[1], b=ExtZr, out=jumpEquals);
+    Not (in=ExtNg, out=notNg);
+    Not (in=ExtZr, out=notZr);
+    And (a=notNg, b=notZr, out=andNotNgNotZr);
+    And (a=instruction[0], b=andNotNgNotZr, out=jumpGreaterThan);
+    Or (a=jumpLessThan, b=jumpEquals, out=jumpLessThanEquals);
+    Or (a=jumpGreaterThan, b=jumpLessThanEquals, out=loadJump);
+
+    // PC
+    PC (in=aReg, load=loadJump, inc=true, reset=reset, out[0..14]=Cpc);
+
+    // Output if A-instruction (regular CPU)
+    CPU(inM=inM, instruction=instruction, reset=reset, outM=AOutM,
+    writeM=AWriteM, addressM=AAddressM, pc=Apc);
+
+    // Decision 2020
+    Mux16(a=AOutM , b=COutM ,sel=instruction[15], out=outM);
+    Mux16(a[15]=true, a[0..14]=AAddressM, b[15]=true, b[0..14]=CAddressM,
+    sel=instruction[15], out[0..14]=addressM);
+    Mux16(a[15]=true, a[0..14]=Apc, b[15]=true, b[0..14]=Cpc,
+    sel=instruction[15], out[0..14]=pc);
+    Mux(a=AWriteM, b=CWriteM, sel=instruction[15], out=writeM);
+
 }
