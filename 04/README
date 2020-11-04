@@ -15,7 +15,7 @@ divide/Divide.asm - Implements assembly program to divide two numbers
 fill/Fill.asm - Implements assembly program that fills screen when any key is
                 pressed.
 mult/Mult.asm - Implements assembly program to multiply two numbers.
-sort/Sort.asm -
+sort/Sort.asm - Implements Bubble Sort in assembly to sort a list in descending order
 
 Remarks
 -------
