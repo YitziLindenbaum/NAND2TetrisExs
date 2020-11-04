@@ -1,74 +1,70 @@
-/**
-* This chip is an extension of the book CPU by using the extended ALU.
-* More specificly if instruction[15]==0 or (instruction[14] and instruction[13] equals 1)
-* the CpuMul behave exactly as the book CPU.
-* While if it is C instruction and instruction[13] == 0 the output will be D*A/M 
-* (according to instruction[12]).
-* Moreover, if it is c instruction and instruction[14] == 0 it will behave as follows:
-*
-* instruction:  | 12 | 11 | 10 |
-* _____________________________
-* shift left D  | 0  | 1  | 1  |
-* shift left A  | 0  | 1  | 0  |
-* shift left M  | 1  | 1  | 0  |
-* shift right D | 0  | 0  | 1  |
-* shift right A | 0  | 0  | 0  |
-* shift right M | 1  | 0  | 0  |
-**/
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/CPU.hdl
 
-CHIP CpuMul{
+/**
+ * The Hack CPU (Central Processing unit), consisting of an ALU,
+ * two registers named A and D, and a program counter named PC.
+ * The CPU is designed to fetch and execute instructions written in 
+ * the Hack machine language. In particular, functions as follows:
+ * Executes the inputted instruction according to the Hack machine 
+ * language specification. The D and A in the language specification
+ * refer to CPU-resident registers, while M refers to the external
+ * memory location addressed by A, i.e. to Memory[A]. The inM input 
+ * holds the value of this location. If the current instruction needs 
+ * to write a value to M, the value is placed in outM, the address 
+ * of the target location is placed in the addressM output, and the 
+ * writeM control bit is asserted. (When writeM==0, any value may 
+ * appear in outM). The outM and writeM outputs are combinational: 
+ * they are affected instantaneously by the execution of the current 
+ * instruction. The addressM and pc outputs are clocked: although they 
+ * are affected by the execution of the current instruction, they commit 
+ * to their new values only in the next time step. If reset==1 then the 
+ * CPU jumps to address 0 (i.e. pc is set to 0 in next time step) rather 
+ * than to the address resulting from executing the current instruction. 
+ */
+
+CHIP CpuMul {
 
     IN  inM[16],         // M value input  (M = contents of RAM[A])
         instruction[16], // Instruction for execution
         reset;           // Signals whether to re-start the current
-                         // program (reset=1) or continue executing
-                         // the current program (reset=0).
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
 
     OUT outM[16],        // M value output
-        writeM,          // Write into M? 
+        writeM,          // Write to M? 
         addressM[15],    // Address in data memory (of M)
         pc[15];          // address of next instruction
 
     PARTS:
-    // Output if C-instruction
+    Mux16 (a=instruction, b=aluOutput, sel=instruction[15],
+           out=muxInstructionOut);
+    Not (in=instruction[15], out=notFirstBit);
+    And (a=instruction[5], b=instruction[15], out=firstBitAndLoadBit);
+    Or (a=notFirstBit, b=firstBitAndLoadBit, out=aRegisterLoad);
+    ARegister (in=muxInstructionOut, load=aRegisterLoad, out=aRegisterOut,
+               out[0..14]=addressM);
 
-    // outM & addressM
-    Mux16(a=instruction, b=COutM, sel=instruction[15], out=MuxA);
-    Not(in=instruction[15], out=AIns);
-    Or(a=AIns, b=instruction[5], out=loadA);
-    ARegister (in=MuxA, load=loadA, out=aReg, out[0..14]=CAddressM);
+    And (a=instruction[4], b=instruction[15], out=dRegisterLoad);
+    DRegister (in=aluOutput, load=dRegisterLoad, out=dRegisterOut);
+    Mux16 (a=aRegisterOut, b=inM, sel=instruction[12], out=muxARegisterOut);  // Feed M into the ALU iff the a-bit == 0
 
-    Mux16(a=aReg, b=inM, sel=instruction[12], out=AorM); // choose A or M
-    DRegister (in=COutM, load=instruction[4], out=dReg);
-    ExtendAlu(x=dReg, y=AorM, instruction=instruction[6..14], out=COutM,
-    zr=ExtZr, ng=ExtNg);
+    ExtendAlu(x=dRegisterOut, y=muxARegisterOut, instruction=instruction[6..14],
+    out=aluOutput, out=outM, zr=zrOut, ng=ngOut);
+    And (a=instruction[3], b=instruction[15], out=writeM);
 
-    // writeM
-    And(a=instruction[3], b=instruction[3], out=CWriteM);
-
-    // Jump?
-    And (a=instruction[2], b=ExtNg, out=jumpLessThan);
-    And (a=instruction[1], b=ExtZr, out=jumpEquals);
-    Not (in=ExtNg, out=notNg);
-    Not (in=ExtZr, out=notZr);
+    // Load bit calculation
+    And (a=instruction[2], b=ngOut, out=jumpLessThan);
+    And (a=instruction[1], b=zrOut, out=jumpEquals);
+    Not (in=ngOut, out=notNg);
+    Not (in=zrOut, out=notZr);
     And (a=notNg, b=notZr, out=andNotNgNotZr);
     And (a=instruction[0], b=andNotNgNotZr, out=jumpGreaterThan);
     Or (a=jumpLessThan, b=jumpEquals, out=jumpLessThanEquals);
-    Or (a=jumpGreaterThan, b=jumpLessThanEquals, out=loadJump);
+    Or (a=jumpGreaterThan, b=jumpLessThanEquals, out=jump);
+    And (a=jump, b=instruction[15], out=loadJump);
 
-    // PC
-    PC (in=aReg, load=loadJump, inc=true, reset=reset, out[0..14]=Cpc);
-
-    // Output if A-instruction (regular CPU)
-    CPU(inM=inM, instruction=instruction, reset=reset, outM=AOutM,
-    writeM=AWriteM, addressM=AAddressM, pc=Apc);
-
-    // Decision 2020
-    Mux16(a=AOutM , b=COutM ,sel=instruction[15], out=outM);
-    Mux16(a[15]=true, a[0..14]=AAddressM, b[15]=true, b[0..14]=CAddressM,
-    sel=instruction[15], out[0..14]=addressM);
-    Mux16(a[15]=true, a[0..14]=Apc, b[15]=true, b[0..14]=Cpc,
-    sel=instruction[15], out[0..14]=pc);
-    Mux(a=AWriteM, b=CWriteM, sel=instruction[15], out=writeM);
-
+    PC (in=aRegisterOut, load=loadJump, inc=true, reset=reset, out[0..14]=pc);
 }
