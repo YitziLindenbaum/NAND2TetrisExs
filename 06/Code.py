@@ -85,6 +85,8 @@ class Code:
                             "A-D", "D|A"}
         self.test(comp_bin, comp_asm in instruction6_yes)
 
+        return comp_bin
+
     def jump(self):
         jump_asm = self.parser.jump()
         jump_bin = ""
