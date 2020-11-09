@@ -11,9 +11,9 @@ NEWLINE = '\n'
 if __name__ == '__main__':
     all_files = [argv[1]]
     if isdir(argv[1]):  # The supplied path is a directory
-        all_files = [join(argv[1], file) for file in listdir(argv[1]) if isfile(join(argv[1], file)) if file.endswith(ASM_EXTENSION)]  # List all .asm files in the directory
+        # List all .asm files in the directory
+        all_files = [join(argv[1], file) for file in listdir(argv[1]) if isfile(join(argv[1], file)) if file.endswith(ASM_EXTENSION)]
 
-    print(all_files)
     for file in all_files:
         f = open(file, 'r')
         parser = p.Parser(f)
