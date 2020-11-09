@@ -1,3 +1,8 @@
+A_COMMAND = 'a_command'
+C_COMMAND = 'c_command'
+L_COMMAND = 'l_command'
+
+
 class Code:
 
     def __init__(self, parser):
@@ -7,7 +12,12 @@ class Code:
         """
         :return: Returns the final binary instruction to be written to the .Hack file
         """
-        pass
+        if self.parser.command_type() == A_COMMAND:
+            return '0' + self.binary()
+        elif self.parser.command_type() == C_COMMAND:
+            return '1' + self.dest() + self.comp() + self.jump()
+        elif self.parser.command_type() == L_COMMAND:
+            pass
 
     def binary(self):
         return str(bin(int(self.parser.symbol())))  # check that there won't
