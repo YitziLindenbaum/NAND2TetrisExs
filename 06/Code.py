@@ -12,11 +12,11 @@ class Code:
         """
         :return: Returns the final binary instruction to be written to the .Hack file
         """
-        if self.parser.command_type() == A_COMMAND:
+        if self.parser.commandType() == A_COMMAND:
             return '0' + self.binary()
-        elif self.parser.command_type() == C_COMMAND:
+        elif self.parser.commandType() == C_COMMAND:
             return '1' + self.dest() + self.comp() + self.jump()
-        elif self.parser.command_type() == L_COMMAND:
+        elif self.parser.commandType() == L_COMMAND:
             pass
 
     def binary(self):
