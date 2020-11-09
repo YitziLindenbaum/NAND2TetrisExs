@@ -20,7 +20,7 @@ class Code:
             pass
 
     def binary(self):
-        return "{0:15b}".format(self.parser.symbol())  # check that there won't
+        return "{0:015b}".format(int(self.parser.symbol()))  # check that there won't
         # be overload with int
 
     def test(self, string, test):
