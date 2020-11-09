@@ -92,10 +92,8 @@ class Code:
     def jump(self):
         jump_asm = self.parser.jump()
         jump_bin = ""
-        print("jump_asm: ", jump_asm)
         jump_bin = self.test(jump_bin, jump_asm in {"JLT", "JNE", "JLE", "JMP"})
         jump_bin = self.test(jump_bin, jump_asm in {"JEQ", "JGE", "JLE", "JMP"})
         jump_bin = self.test(jump_bin, jump_asm in {"JGT", "JGE", "JNE", "JMP"})
-        print("jump_bin: ", jump_bin)
 
         return jump_bin
