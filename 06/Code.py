@@ -54,7 +54,7 @@ class Code:
         # instruction[12]
         if "M" in comp_asm:
             comp_bin += "1"
-            comp_asm.replace("M", "A")
+            comp_asm = comp_asm.replace("M", "A")
         else:
             comp_bin += "0"
 
@@ -63,7 +63,7 @@ class Code:
 
         # instruction[10] (NX or shift D)
         instruction10_yes = {"1", "-1", "A", "!A", "-A", "D+1", "A+1",
-                             "A-1", "D-A", "D|A", "D>>", "D<<"}
+                             "A-1", "D-A", "D|A", "D>>", "D<<", "M"}
         comp_bin = self.test(comp_bin, comp_asm in instruction10_yes)
 
         # append zeroes and stop if shift command
