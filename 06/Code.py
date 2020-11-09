@@ -5,7 +5,7 @@ L_COMMAND = 'l_command'
 
 class Code:
 
-    def __init__(self, parser):
+    def __init__(self, parser, table):
         self.parser = parser
 
     def processCode(self) -> str:

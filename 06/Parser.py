@@ -24,22 +24,35 @@ class Parser:
         """
         :param file_obj: A file object -- already opened
         """
+        self.table = dict()
+        for i in range(16):  # Init R0 - R15
+            key = 'R' + str(i)
+            self.table[key] = i
+        constants = [('SP', 0), ('LCL', 1), ('ARG', 2), ('THIS', 3), ('THAT', 4), ('SCREEN', 16384), ('KBD', 24576)]
+        for key, value in constants:
+            self.table[key] = value
+
         self.file_obj = file_obj
         self.lines = []
-        self.remove_comments()
+        self.preprocess()
         self.current_command = -1  # Init so there is no current command
         self.command_type: str = ''
         self._jump: str = ''
         self._symbol: str = ''
         self._dest: str = ''
         self._comp: str = ''
+        self.table_counter = 16
 
-    def remove_comments(self):
+    def get_table(self):
+        return self.table
+
+    def preprocess(self):
         """
         Iterates through the file, removes all comments and whitespaces,
         and stores the resulting list of strings in self.lines
         """
         all_lines = self.file_obj.readlines()  # Read all lines of the file into a list
+        line_number = 0
         for line in all_lines:
             line = ''.join(line.split())  # Remove all whitespaces from the line
 
@@ -50,8 +63,15 @@ class Parser:
                 parts = line.split(COMMENT_HEADER)
                 line = parts[0]
 
+            if L_COMMAND_HEADER in line:
+                symbol = line[1:-1]  # remove parens
+                if symbol not in self.table:
+                    self.table[symbol] = line_number
+                line = ''
+
             if line != '':
                 self.lines.append(line)
+                line_number += 1
 
     def parseLine(self):
         """
@@ -60,10 +80,19 @@ class Parser:
         self._symbol, self._comp, self._jump, self._dest = '', '', '', ''
 
         line = self.lines[self.current_command]
+        constants = []
+
         if A_COMMAND_HEADER in line:  # We have a line of form: '@value'
             self.command_type = A_COMMAND
             _split = line.split(A_COMMAND_HEADER)  # Will return a list of form: ['', 'value']
             self._symbol = _split[1]
+
+            if self._symbol in self.table:
+                self._symbol = self.table[self._symbol]
+            elif not self._symbol.isnumeric():
+                self.table[self._symbol] = self.table_counter
+                self.table_counter += 1
+
         elif L_COMMAND_HEADER in line and L_COMMAND_FOOTER in line:  # We have a line of form (Xxx)
             self.command_type = L_COMMAND
             self._symbol = line[1:len(line) - 1]  # Strip the parenthesis from the symbol
