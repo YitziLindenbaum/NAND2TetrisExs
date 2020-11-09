@@ -91,6 +91,7 @@ class Parser:
                 self._symbol = self.table[self._symbol]
             elif not self._symbol.isnumeric():
                 self.table[self._symbol] = self.table_counter
+                self._symbol = self.table_counter
                 self.table_counter += 1
 
         elif L_COMMAND_HEADER in line and L_COMMAND_FOOTER in line:  # We have a line of form (Xxx)
