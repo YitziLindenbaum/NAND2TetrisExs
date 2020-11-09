@@ -1,12 +1,16 @@
-
-
 class Code:
 
     def __init__(self, parser):
         self.parser = parser
 
+    def processCode(self) -> str:
+        """
+        :return: Returns the final binary instruction to be written to the .Hack file
+        """
+        pass
+
     def binary(self):
-        return str(bin(int(self.parser.symbol()))) # check that there won't
+        return str(bin(int(self.parser.symbol())))  # check that there won't
         # be overload with int
 
     def test(self, string, test):
@@ -80,7 +84,3 @@ class Code:
         self.test(jump_bin, jump_asm in {"JGT", "JGE", "JNE", "JMP"})
 
         return jump_bin
-
-
-if __name__ == 'main':
-    pass

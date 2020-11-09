@@ -11,7 +11,11 @@ Yitzchak Lindenbaum, ID 336082789, yitzchak.lindenbaum@mail.huji.ac.il
 Submitted Files
 ---------------
 README - This file.
-
+Main.py -
+Parser.py - A module that parses the lines of an input .asm file
+Code.py
+Makefile - a Makefile to allow execution of the Assembler file
+Assembler - a run file that calls the main in Main.py
 
 Remarks
 -------
