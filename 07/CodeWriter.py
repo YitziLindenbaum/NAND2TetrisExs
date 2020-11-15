@@ -4,7 +4,7 @@ class CodeWriter:
         """
         :param file: An already opened Assembly file to write to
         """
-        pass
+        self.asm_file = file
 
     def set_file_name(self, file_name: str):
         """

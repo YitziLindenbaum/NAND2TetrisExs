@@ -3,6 +3,7 @@ from os import listdir
 from os.path import isdir, isfile, join
 
 p = __import__('Parser')
+c = __import__('CodeWriter')
 
 ASM_EXTENSION = '.asm'
 VM_EXTENSION = '.vm'
@@ -17,11 +18,13 @@ if __name__ == '__main__':
         out_file_name = argv[1].replace(VM_EXTENSION, ASM_EXTENSION)
 
     with open(out_file_name, 'w') as out_file:
+        code_writer = c.CodeWriter(out_file)
         for file in all_files:
             f = open(file, 'r')
             parser = p.Parser(f)
             f.close()
 
+            code_writer.set_file_name(file)
             while parser.hasMoreCommands():
                 parser.advance()
                 # todo
