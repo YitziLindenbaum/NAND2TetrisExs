@@ -29,9 +29,9 @@ SEGMENTS = {
     'pointer',
     'temp'
 }
-MEMORY_ACCESS_COMMANDS = {'push', 'pop'}
-PROGRAM_FLOW_COMMANDS = {'label', 'goto', 'if-goto'}
-FUNCTION_CALLING_COMMANDS = {'function', 'call', 'return'}
+MEMORY_ACCESS_COMMANDS = {C_PUSH, C_POP}
+PROGRAM_FLOW_COMMANDS = {C_LABEL, C_GOTO, C_IF}
+FUNCTION_CALLING_COMMANDS = {C_FUNCTION, C_CALL, C_RETURN}
 TRUE = 0
 FALSE = -1
 
