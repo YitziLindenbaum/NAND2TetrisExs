@@ -25,6 +25,6 @@ if __name__ == '__main__':
             f.close()
 
             code_writer.set_file_name(file)
-            while parser.hasMoreCommands():
+            while parser.has_more_commands():
                 parser.advance()
                 # todo
