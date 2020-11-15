@@ -1,4 +1,5 @@
 ACCESS_STACK = "@SP\nA=M-1\n"  # Sets A-reg at top of stack
+DECREASE_STACK_PTR = "@SP\nM=M-1\n"
 
 
 def generate_cmp_code(jump):
@@ -12,19 +13,6 @@ def generate_cmp_code(jump):
         \n(END_TRUE)\n".format(jump))
 
 
-ARITHMETIC_COMMANDS = {
-    'add',
-    'sub',
-    'neg',
-    'eq',
-    'gt',
-    'lt',
-    'and',
-    'or',
-    'not'
-}
-
-
 class CodeWriter:
 
     def __init__(self, file):
@@ -33,6 +21,7 @@ class CodeWriter:
         """
         self.asm_file = file
         self.vm_file = None
+        self.static_ptr = 0
 
     def set_file_name(self, file_name: str):
         """
@@ -73,15 +62,47 @@ class CodeWriter:
             elif command == "or":
                 self.asm_file.write("M=M|D\n")
 
-            self.asm_file.write("@SP\nM=M-1\n")  # (*SP)--
+            self.asm_file.write(DECREASE_STACK_PTR)  # (*SP)--
 
     def write_push_pop(self, command: str, segment: str, index: int):
         """
-        Writes the Assembly code that is teh translation of the given command.
+        Writes the Assembly code that is the translation of the given command.
         Command can be either C_PUSH or C_POP
         """
-        pass
+        out_str = ''
 
-    def close(self):
-        """Closes the output file"""
-        pass
+        # Set Register to top of stack and save it to R13 and D
+        if command == 'pop':
+            out_str += ACCESS_STACK + 'D=M\n@R13\nM=D\n'
+            out_str += DECREASE_STACK_PTR
+
+        # Locate Segment
+        out_str += '@'
+        if segment == 'temp':
+            out_str += f'R{5+index}\nD=M\n'
+        elif segment == 'static':
+            out_str += self.vm_file.replace('vm', '') + f'{index}\nD=M\n'
+        elif segment == 'pointer':
+            out_str += f'R{3 + index}\nD=M\n'
+        elif segment == 'constant':
+            out_str += f'{index}\nD=A\n@constant{index}\nM=D\n'
+        else:
+            out_str += f'{index}\nD=A\n@'
+            if segment == 'local':
+                out_str += 'R1'
+            elif segment == 'argument':
+                out_str += 'R2'
+            elif segment == 'this':
+                out_str += 'R3'
+            elif segment == 'that':
+                out_str += 'R4'
+            out_str += f'\nA=D+M\nD=M\n'  # Sets R14 to segment + index
+        out_str += '@R14\nM=D\n'
+
+        if command == 'pop':  # Save the popped value to the desired segment
+            out_str += '@R13\nD=M\n@R14\nA=M\nM=D\n'
+
+        if command == 'push':  # Assumes the pointer to the value to push is in R14
+            out_str += '@R14\nA=M\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
+
+        self.asm_file.write(out_str)
