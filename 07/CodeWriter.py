@@ -1,15 +1,26 @@
 ACCESS_STACK = "@SP\nA=M-1\n"  # Sets A-reg at top of stack
 
+EQ_CODE = "D=M-D\n@TRUE\nD;{}\nM=0\n@END_TRUE\n0;JMP\n(TRUE)\nM=-1\
+        \n(END_TRUE)\n"
+
+LT_CODE = "@M_NEG\nM;JLT\n@FALSE\nD;JLE\n@SAME_SGN\n0;JMP\n(" \
+          "M_NEG)\n@TRUE\nD;JGE\n(SAME_SGN)\nD=M-D\n@TRUE\nD;JLT\n(" \
+          "FALSE)\nM=0\n@END\n0;JMP\n(TRUE)\nM=-1\n(END)\n"
+
+GT_CODE = "@M_POS\nM;JGE\n@FALSE\nD;JGE\n@SAME_SGN\n0;JMP\n(" \
+          "M_POS)\n@TRUE\nD;JLT\n(SAME_SGN)\nD=M-D\n@TRUE\nD;JGT\n(" \
+          "FALSE)\nM=0\n@END\n0;JMP\n(TRUE)\nM=-1\n(END)\n"
+
 
 def generate_cmp_code(jump):
     """
     Function to easily generate ASM code to perform mathematical comparisons on
     top two levels of stack.
-    :param jump: Jump-code (JEQ, JGT, or JLT) to be inserted into the ASM code
-    :return: ASM code that performs eq, gt, or lt respectively
+    :param jump: Jump-code (JGT or JLT) to be inserted into the ASM code
+    :return: ASM code that performs gt or lt, respectively
     """
-    return("D=M-D\n@TRUE\nD;{}\nM=0\n@END_TRUE\n0;JMP\n(TRUE)\nM=-1\
-        \n(END_TRUE)\n".format(jump))
+    return ("D=M-D\n@TRUE\nD;{}\nM=0\n@END\n0;JMP\n(TRUE)\nM=-1\
+        \n(END)\n".format(jump))
 
 
 ARITHMETIC_COMMANDS = {
@@ -54,19 +65,19 @@ class CodeWriter:
             self.asm_file.write("D=M\n")  # Save top of stack in D-reg
             self.asm_file.write("A=A-1\n")  # Access second line of stack
 
-        # Binary commands
+            # Binary commands
             if command == "add":
                 self.asm_file.write("M=M+D\n")
             elif command == "sub":
                 self.asm_file.write("M=M-D\n")
             elif command == "eq":
-                code = generate_cmp_code("JEQ")
+                code = generate_cmp_code(EQ_CODE)
                 self.asm_file.write(code)
             elif command == "gt":
-                code = generate_cmp_code("JGT")
+                code = generate_cmp_code(GT_CODE)
                 self.asm_file.write(code)
             elif command == "lt":
-                code = generate_cmp_code("JLT")
+                code = generate_cmp_code(LT_CODE)
                 self.asm_file.write(code)
             elif command == "and":
                 self.asm_file.write("M=M&D\n")
