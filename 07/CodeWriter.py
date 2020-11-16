@@ -128,7 +128,7 @@ class CodeWriter:
             if segment == 'constant':
                 out_str = ''
 
-        elif command == 'push':  # Assumes the pointer to the value to push is in R14
+        if command == 'push':  # Assumes the pointer to the value to push is in R14
             out_str += '@SP\nA=M\nM=D\n@SP\nM=M+1\n'
 
         self.asm_file.write(out_str)

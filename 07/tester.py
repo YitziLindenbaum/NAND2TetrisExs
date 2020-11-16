@@ -12,9 +12,9 @@ import os
 CPU_EMULATOR_PATH = r"..\..\tools\CPUEmulator.bat"
 
 # Command to run your VM Translator
-VM_TRANSLATOR_COMMAND = "VMtranslator"  # if VMTranslator - files must be in same directory
+# VM_TRANSLATOR_COMMAND = "VMtranslator"  # if VMTranslator - files must be in same directory
 # VM_TRANSLATOR_COMMAND = "python3 Main.py"
-# VM_TRANSLATOR_COMMAND = "python Main.py"
+VM_TRANSLATOR_COMMAND = "python Main.py"
 # VM_TRANSLATOR_COMMAND = "java Main"
 
 
