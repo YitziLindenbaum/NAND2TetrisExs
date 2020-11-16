@@ -1,7 +1,7 @@
 ACCESS_STACK = "@SP\nA=M-1\n"  # Sets A-reg at top of stack
 DECREASE_STACK_PTR = "@SP\nM=M-1\n"
 
-EQ_CODE = "D=M-D\n@TRUE\nD;{}\nM=0\n@END_TRUE\n0;JMP\n(TRUE)\nM=-1\
+EQ_CODE = "D=M-D\n@TRUE\nD;JEQ\nM=0\n@END_TRUE\n0;JMP\n(TRUE)\nM=-1\
         \n(END_TRUE)\n"
 
 LT_CODE = "@M_NEG\nM;JLT\n@FALSE\nD;JLE\n@SAME_SGN\n0;JMP\n(" \
