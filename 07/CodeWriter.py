@@ -1,16 +1,25 @@
 ACCESS_STACK = "@SP\nA=M-1\n"  # Sets A-reg at top of stack
 DECREASE_STACK_PTR = "@SP\nM=M-1\n"
 
-EQ_CODE = "D=M-D\n@TRUE_{counter}\nD;JEQ\n@SP\nA=M-1\nA=A-1\nM=0\n@END_TRUE_{counter}\n0;JMP\n(TRUE_{counter})\n" \
+EQ_CODE = "D=M-D\n@TRUE_{counter}\nD;JEQ\n@SP\nA=M-1\nA=A-1\nM=0\n" \
+          "@END_TRUE_{counter}\n0;JMP\n(TRUE_{counter})\n" \
           "@SP\nA=M-1\nA=A-1\nM=-1\n(END_TRUE_{counter})\n"
 
-LT_CODE = "@M_NEG_{counter}\nM;JLT\n@FALSE_{counter}\nD;JLE\n@SAME_SGN_{counter}\n0;JMP\n(" \
-          "M_NEG_{counter})\n@TRUE_{counter}\nD;JGE\n(SAME_SGN_{counter})\nD=M-D\n@TRUE_{counter}\nD;JLT\n(" \
-          "FALSE_{counter})\n@SP\nA=M-1\nA=A-1\nM=0\n@END_{counter}\n0;JMP\n(TRUE_{counter})\n@SP\nA=M-1\nA=A-1\nM=-1\n(END_{counter})\n"
+LT_CODE = "D=M\n@y\nM=D\n@SP\nA=M-1\nA=A-1\nD=M\n@x\nM=D\n" \
+          "@X_NEG_{counter}\nD;JLT\n@y\nD=M\n@FALSE_{counter}\nD;JLE\n" \
+          "@SAME_SGN_{counter}\n0;JMP\n(X_NEG_{counter})\n@y\nD=M\n@TRUE_{" \
+          "counter}\nD;JGE\n(SAME_SGN_{counter})\n@x\nD=M-D\n@TRUE_{" \
+          "counter}\nD;JLT\n(FALSE_{counter})\n@SP\nA=M-1\nA=A-1\nM=0\n" \
+          "@END_{counter}\n0;JMP\n(TRUE_{counter})\n@SP\nA=M-1\nA=A-1\n" \
+          "M=-1\n(END_{counter})\n"
 
-GT_CODE = "@M_POS_{counter}\nM;JGE\n@FALSE_{counter}\nD;JGE\n@SAME_SGN_{counter}\n0;JMP\n(" \
-          "M_POS_{counter})\n@TRUE_{counter}\nD;JLT\n(SAME_SGN_{counter})\nD=M-D\n@TRUE_{counter}\nD;JGT\n(" \
-          "FALSE_{counter})\n@SP\nA=M-1\nA=A-1\nM=0\n@END_{counter}\n0;JMP\n(TRUE_{counter})\n@SP\nA=M-1\nA=A-1\nM=-1\n(END_{counter})\n"
+GT_CODE = "D=M\n@y\nM=D\n@SP\nA=M-1\nA=A-1\nD=M\n@x\nM=D\n" \
+          "@X_POS_{counter}\nD;JGT\n@y\nD=M\n@FALSE_{counter}\nD;JGE\n" \
+          "@SAME_SGN_{counter}\n0;JMP\n(X_POS_{counter})\n@y\nD=M\n@TRUE_{" \
+          "counter}\nD;JLE\n(SAME_SGN_{counter})\n@x\nD=M-D\n@TRUE_{" \
+          "counter}\nD;JGT\n(FALSE_{counter})\n@SP\nA=M-1\nA=A-1\nM=0\n" \
+          "@END_{counter}\n0;JMP\n(TRUE_{counter})\n@SP\nA=M-1\nA=A-1\n" \
+          "M=-1\n(END_{counter})\n"
 
 
 class CodeWriter:
@@ -35,8 +44,19 @@ class CodeWriter:
         Writes the assembly code that is the translation of the given command.
         """
         self.asm_file.write(ACCESS_STACK)
+
+        # < and > -- special treatment
+        if command == "gt":
+            self.asm_file.write(GT_CODE.format(counter=self.counter))
+            self.counter += 1
+            self.asm_file.write(DECREASE_STACK_PTR)
+        elif command == "lt":
+            self.asm_file.write(LT_CODE.format(counter=self.counter))
+            self.counter += 1
+            self.asm_file.write(DECREASE_STACK_PTR)
+
         # Unitary commands
-        if command == "neg":
+        elif command == "neg":
             self.asm_file.write("M=-M\n")
         elif command == "not":
             self.asm_file.write("M=!M\n")
@@ -51,15 +71,11 @@ class CodeWriter:
                 self.asm_file.write("M=M-D\n")
             elif command == "eq":
                 self.asm_file.write(EQ_CODE.format(counter=self.counter))
-            elif command == "gt":
-                self.asm_file.write(GT_CODE.format(counter=self.counter))
-            elif command == "lt":
-                self.asm_file.write(LT_CODE.format(counter=self.counter))
+                self.counter += 1
             elif command == "and":
                 self.asm_file.write("M=M&D\n")
             elif command == "or":
                 self.asm_file.write("M=M|D\n")
-            self.counter += 1
             self.asm_file.write(DECREASE_STACK_PTR)  # (*SP)--
 
     def write_push_pop(self, command: str, segment: str, index: int):
@@ -76,7 +92,7 @@ class CodeWriter:
         # Locate Segment
         out_str += '@'
         if segment == 'temp':
-            out_str += 'R{}\n'.format(5+index)
+            out_str += 'R{}\n'.format(5 + index)
         elif segment == 'static':
             out_str += self.vm_file.replace('vm', '') + '{}\n'.format(index)
         elif segment == 'pointer':
