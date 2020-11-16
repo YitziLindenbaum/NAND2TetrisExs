@@ -1,12 +1,5 @@
 @7
 D=A
-@constant7
-M=D
-@R14
-M=D
-@R14
-A=M
-D=M
 @SP
 A=M
 M=D
@@ -14,13 +7,6 @@ M=D
 M=M+1
 @8
 D=A
-@constant8
-M=D
-@R14
-M=D
-@R14
-A=M
-D=M
 @SP
 A=M
 M=D

@@ -24,7 +24,7 @@ if __name__ == '__main__':
             parser = p.Parser(f)
             f.close()
 
-            code_writer.set_file_name(file)
+            code_writer.set_file_name(osp.split(file)[1])
             while parser.has_more_commands():
                 parser.advance()
                 if parser.command_type() == 'arithmetic':

@@ -84,21 +84,22 @@ class CodeWriter:
 
         # Set Register to top of stack and save it to R13 and D
         if command == 'pop':
-            out_str += ACCESS_STACK + 'D=M\n@R13\nM=D\n'
-            out_str += DECREASE_STACK_PTR
+            out_str += ACCESS_STACK + 'D=M\n' + DECREASE_STACK_PTR
 
         # Locate Segment
         out_str += '@'
         if segment == 'temp':
-            out_str += f'R{5+index}\nD=M\n'
+            out_str += 'R{}\n'.format(5+index)
         elif segment == 'static':
-            out_str += self.vm_file.replace('vm', '') + f'{index}\nD=M\n'
+            out_str += self.vm_file.replace('vm', '') + '{}\n'.format(index)
         elif segment == 'pointer':
-            out_str += f'R{3 + index}\nD=M\n'
+            out_str += 'R{}\n'.format(3 + index)
         elif segment == 'constant':
-            out_str += f'{index}\nD=A\n@constant{index}\nM=D\n'
+            out_str += '{}\nD=A\n'.format(index)
         else:
-            out_str += f'{index}\nD=A\n@'
+            if command == 'pop':
+                out_str += 'R13\nM=D\n@'
+            out_str += '{}\nD=A\n@'.format(index)
             if segment == 'local':
                 out_str += 'R1'
             elif segment == 'argument':
@@ -107,13 +108,24 @@ class CodeWriter:
                 out_str += 'R3'
             elif segment == 'that':
                 out_str += 'R4'
-            out_str += f'\nA=D+M\nD=M\n'  # Sets R14 to segment + index
-        out_str += '@R14\nM=D\n'
+            out_str += '\nA=D+M\n'  # Sets R14 to segment + index
+            if command == 'pop':
+                out_str += 'D=A\n'
+            else:
+                out_str += 'D=M\n'
 
-        if command == 'pop':  # Save the popped value to the desired segment
-            out_str += '@R13\nD=M\n@R14\nA=M\nM=D\n'
+        if segment in {'temp', 'static', 'pointer'}:
+            if command == 'pop':
+                out_str += 'M=D\n'
+            else:
+                out_str += 'D=M\n'
 
-        if command == 'push':  # Assumes the pointer to the value to push is in R14
-            out_str += '@R14\nA=M\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
+        elif command == 'pop':  # Save the popped value to the desired segment
+            out_str += '@R14\nM=D\n@R13\nD=M\n@R14\nA=M\nM=D\n'
+            if segment == 'constant':
+                out_str = ''
+
+        elif command == 'push':  # Assumes the pointer to the value to push is in R14
+            out_str += '@SP\nA=M\nM=D\n@SP\nM=M+1\n'
 
         self.asm_file.write(out_str)
