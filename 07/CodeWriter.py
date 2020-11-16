@@ -1,27 +1,16 @@
 ACCESS_STACK = "@SP\nA=M-1\n"  # Sets A-reg at top of stack
 DECREASE_STACK_PTR = "@SP\nM=M-1\n"
 
-EQ_CODE = "D=M-D\n@TRUE\nD;JEQ\nM=0\n@END_TRUE\n0;JMP\n(TRUE)\nM=-1\
-        \n(END_TRUE)\n"
+EQ_CODE = "D=M-D\n@TRUE_{counter}\nD;JEQ\n@SP\nA=M-1\nA=A-1\nM=0\n@END_TRUE_{counter}\n0;JMP\n(TRUE_{counter})\n" \
+          "@SP\nA=M-1\nA=A-1\nM=-1\n(END_TRUE_{counter})\n"
 
-LT_CODE = "@M_NEG\nM;JLT\n@FALSE\nD;JLE\n@SAME_SGN\n0;JMP\n(" \
-          "M_NEG)\n@TRUE\nD;JGE\n(SAME_SGN)\nD=M-D\n@TRUE\nD;JLT\n(" \
-          "FALSE)\nM=0\n@END\n0;JMP\n(TRUE)\nM=-1\n(END)\n"
+LT_CODE = "@M_NEG_{counter}\nM;JLT\n@FALSE_{counter}\nD;JLE\n@SAME_SGN_{counter}\n0;JMP\n(" \
+          "M_NEG_{counter})\n@TRUE_{counter}\nD;JGE\n(SAME_SGN_{counter})\nD=M-D\n@TRUE_{counter}\nD;JLT\n(" \
+          "FALSE_{counter})\n@SP\nA=M-1\nA=A-1\nM=0\n@END_{counter}\n0;JMP\n(TRUE_{counter})\n@SP\nA=M-1\nA=A-1\nM=-1\n(END_{counter})\n"
 
-GT_CODE = "@M_POS\nM;JGE\n@FALSE\nD;JGE\n@SAME_SGN\n0;JMP\n(" \
-          "M_POS)\n@TRUE\nD;JLT\n(SAME_SGN)\nD=M-D\n@TRUE\nD;JGT\n(" \
-          "FALSE)\nM=0\n@END\n0;JMP\n(TRUE)\nM=-1\n(END)\n"
-
-
-def generate_cmp_code(jump):
-    """
-    Function to easily generate ASM code to perform mathematical comparisons on
-    top two levels of stack.
-    :param jump: Jump-code (JGT or JLT) to be inserted into the ASM code
-    :return: ASM code that performs gt or lt, respectively
-    """
-    return ("D=M-D\n@TRUE\nD;{}\nM=0\n@END\n0;JMP\n(TRUE)\nM=-1\
-        \n(END)\n".format(jump))
+GT_CODE = "@M_POS_{counter}\nM;JGE\n@FALSE_{counter}\nD;JGE\n@SAME_SGN_{counter}\n0;JMP\n(" \
+          "M_POS_{counter})\n@TRUE_{counter}\nD;JLT\n(SAME_SGN_{counter})\nD=M-D\n@TRUE_{counter}\nD;JGT\n(" \
+          "FALSE_{counter})\n@SP\nA=M-1\nA=A-1\nM=0\n@END_{counter}\n0;JMP\n(TRUE_{counter})\n@SP\nA=M-1\nA=A-1\nM=-1\n(END_{counter})\n"
 
 
 class CodeWriter:
@@ -33,6 +22,7 @@ class CodeWriter:
         self.asm_file = file
         self.vm_file = None
         self.static_ptr = 0
+        self.counter = 0
 
     def set_file_name(self, file_name: str):
         """
@@ -60,19 +50,16 @@ class CodeWriter:
             elif command == "sub":
                 self.asm_file.write("M=M-D\n")
             elif command == "eq":
-                code = generate_cmp_code(EQ_CODE)
-                self.asm_file.write(code)
+                self.asm_file.write(EQ_CODE.format(counter=self.counter))
             elif command == "gt":
-                code = generate_cmp_code(GT_CODE)
-                self.asm_file.write(code)
+                self.asm_file.write(GT_CODE.format(counter=self.counter))
             elif command == "lt":
-                code = generate_cmp_code(LT_CODE)
-                self.asm_file.write(code)
+                self.asm_file.write(LT_CODE.format(counter=self.counter))
             elif command == "and":
                 self.asm_file.write("M=M&D\n")
             elif command == "or":
                 self.asm_file.write("M=M|D\n")
-
+            self.counter += 1
             self.asm_file.write(DECREASE_STACK_PTR)  # (*SP)--
 
     def write_push_pop(self, command: str, segment: str, index: int):
