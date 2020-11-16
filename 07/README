@@ -1,0 +1,21 @@
+bschreiber91,chucklind
+===============================================================================
+Benyamin Schreiber, ID 888800638, benyamin.schreiber@mail.huji.ac.il
+Yitzchak Lindenbaum, ID 336082789, yitzchak.lindenbaum@mail.huji.ac.il
+===============================================================================
+
+                           Project 07 - VM Translator
+                           -----------------------
+
+
+Submitted Files
+---------------
+README - This file.
+Main.py - Main function that calls modules to perform the translation.
+Parser.py - A module that parses the lines of an input .vm file.
+CodeWriter.py - A module that translates the parsed input into Assembly.
+Makefile - a Makefile to allow execution of the VMtranslator file.
+VMtranslator - a run file that calls the main in Main.py.
+
+Remarks
+-------
