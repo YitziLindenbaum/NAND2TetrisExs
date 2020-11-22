@@ -27,7 +27,20 @@ if __name__ == '__main__':
             code_writer.set_file_name(osp.split(file)[1])
             while parser.has_more_commands():
                 parser.advance()
-                if parser.command_type() == 'arithmetic':
+                command_type = parser.command_type()
+                if command_type == 'arithmetic':
                     code_writer.write_arithmetic(parser.arg1())
-                elif parser.command_type() in {'pop', 'push'}:
-                    code_writer.write_push_pop(parser.command_type(), parser.arg1(), int(parser.arg2()))
+                elif command_type in {'pop', 'push'}:
+                    code_writer.write_push_pop(command_type, parser.arg1(), int(parser.arg2()))
+                elif command_type == 'label':
+                    code_writer.write_label(parser.arg1())
+                elif command_type == 'goto':
+                    code_writer.write_goto(parser.arg1())
+                elif command_type == 'if-goto':
+                    code_writer.write_if(parser.arg1())
+                elif command_type == 'call':
+                    code_writer.write_call(parser.arg1(), parser.arg2())
+                elif command_type == 'return':
+                    code_writer.write_return()
+                elif command_type == 'function':
+                    code_writer.write_function(parser.arg1(), parser.arg2())

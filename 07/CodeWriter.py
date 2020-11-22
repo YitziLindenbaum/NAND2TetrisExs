@@ -132,3 +132,31 @@ class CodeWriter:
             out_str += '@SP\nA=M\nM=D\n@SP\nM=M+1\n'
 
         self.asm_file.write(out_str)
+
+    def write_init(self):
+        """Writes the assembly code that effects the VM init"""
+        pass
+
+    def write_label(self, label: str):
+        """Writes the assembly code that effects the label code"""
+        pass
+
+    def write_goto(self, label: str):
+        """Writes the assembly code that effects the goto command"""
+        pass
+
+    def write_if(self, label: str):
+        """Writes the assembly code that effects the if-goto command"""
+        pass
+
+    def write_call(self, func_name: str, num_args: int):
+        """Writes the assembly code that effects the call command"""
+        pass
+
+    def write_return(self):
+        """Writes the assembly code that effects the return command"""
+        pass
+
+    def write_function(self, func_name: str, num_locals: int):
+        """Writes the assembly code that effects the function command"""
+        pass
