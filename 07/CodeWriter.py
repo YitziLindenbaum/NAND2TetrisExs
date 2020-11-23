@@ -158,12 +158,44 @@ class CodeWriter:
 
     def write_call(self, func_name: str, num_args: int):
         """Writes the assembly code that effects the call command"""
-        pass
+
+        def push_calling_data(_label):
+            """Pushes the base pointer in {_label} to the stack"""
+            return '@{}\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'.format(_label)
+
+        out_str = ''
+        out_str += push_calling_data('return-address')
+        out_str += push_calling_data('LCL')  # Save LCL of the calling function
+        out_str += push_calling_data('ARG')  # Save ARG of the calling function
+        out_str += push_calling_data('THIS')  # Save THIS of the calling function
+        out_str += push_calling_data('THAT')  # Save THAT of the calling function
+        out_str += '@5\nD=A\n@{}\nD=D+A\n@SP\nD=M-D\n@ARG\nM=D\n'.format(num_args)  # Reposition ARG
+        out_str += '@SP\nD=M\n@LCL\nM=D\n'  # Reposition LCL
+        self.asm_file.write(out_str)
+
+        self.write_goto(func_name)
+        self.write_label('return-address')
 
     def write_return(self):
         """Writes the assembly code that effects the return command"""
-        pass
+
+        def restore_caller_label(label: str, index: int) -> str:
+            """Returns the Assembly code for label = *(FRAME - index)"""
+            return '@{index}\nD=A\n@FRAME\nA=M-D\nD=M\n@{label}\nM=D\n'.format(index=index, label=label)
+
+        out_str = ''
+        out_str += '@LCL\nD=M\n@FRAME\nM=D\n'  # FRAME = LCL
+        out_str += restore_caller_label('RET', 5)  # RET = *(FRAME - 5)
+        out_str += ACCESS_STACK + 'D=M\n' + DECREASE_STACK_PTR + '@ARG\nA=M\nM=D\n'  # *ARG = pop()
+        out_str += '@ARG\nD=M\n@SP\nM=D+1\n'  # SP = ARG + 1
+        out_str += restore_caller_label('THAT', 1)  # THAT = *(FRAME - 1)
+        out_str += restore_caller_label('THIS', 2)  # THIS = *(FRAME - 2)
+        out_str += restore_caller_label('ARG', 3)  # ARG = *(FRAME - 3)
+        out_str += restore_caller_label('LCL', 4)  # LCL = *(FRAME - 4)
+        out_str += '@RET\nA=M\n0;JMP\n'  # goto RET
+        self.asm_file.write(out_str)
 
     def write_function(self, func_name: str, num_locals: int):
         """Writes the assembly code that effects the function command"""
-        pass
+        self.write_label(func_name)
+        self.asm_file.write('@SP\nA=M\nM=0\n@SP\nM=M+1\n' * num_locals)

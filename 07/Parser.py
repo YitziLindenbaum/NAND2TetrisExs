@@ -1,13 +1,6 @@
 COMMENT_HEADER = '//'
 C_ARITHMETIC = 'arithmetic'
-C_PUSH = 'push'
-C_POP = 'pop'
-C_LABEL = 'label'
-C_GOTO = 'goto'
-C_IF = 'if-goto'
-C_FUNCTION = 'function'
 C_RETURN = 'return'
-C_CALL = 'call'
 ARITHMETIC_COMMANDS = {
     'add',
     'sub',
@@ -19,21 +12,6 @@ ARITHMETIC_COMMANDS = {
     'or',
     'not'
 }
-SEGMENTS = {
-    'argument',
-    'local',
-    'static',
-    'constant',
-    'this',
-    'that',
-    'pointer',
-    'temp'
-}
-MEMORY_ACCESS_COMMANDS = {C_PUSH, C_POP}
-PROGRAM_FLOW_COMMANDS = {C_LABEL, C_GOTO, C_IF}
-FUNCTION_CALLING_COMMANDS = {C_FUNCTION, C_CALL, C_RETURN}
-TRUE = 0
-FALSE = -1
 
 
 class Parser:

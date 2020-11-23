@@ -44,4 +44,4 @@ if __name__ == '__main__':
                 elif command_type == 'return':
                     code_writer.write_return()
                 elif command_type == 'function':
-                    code_writer.write_function(parser.arg1(), parser.arg2())
+                    code_writer.write_function(parser.arg1(), int(parser.arg2()))
