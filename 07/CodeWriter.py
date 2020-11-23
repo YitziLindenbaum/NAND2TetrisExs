@@ -135,19 +135,26 @@ class CodeWriter:
 
     def write_init(self):
         """Writes the assembly code that effects the VM init"""
-        pass
+        # self.asm_file.write('@256\nD=A\n@SP\nM=D\n')
+        # self.write_call('Sys.init', 0)
 
     def write_label(self, label: str):
         """Writes the assembly code that effects the label code"""
-        pass
+        self.asm_file.write('(' + label + ')\n')
 
     def write_goto(self, label: str):
         """Writes the assembly code that effects the goto command"""
-        pass
+        self.asm_file.write('@' + label + '\n0;JMP\n')
 
     def write_if(self, label: str):
         """Writes the assembly code that effects the if-goto command"""
-        pass
+        self.asm_file.write(
+            ACCESS_STACK +
+            'D=M\n' +  # Save the top value of the stack into D-Reg
+            DECREASE_STACK_PTR +
+            '@' + label +  # Set the jump location to Label
+            '\nD;JNE\n'  # Jump only if the value in D-Reg is not zero
+                            )
 
     def write_call(self, func_name: str, num_args: int):
         """Writes the assembly code that effects the call command"""

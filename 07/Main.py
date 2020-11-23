@@ -19,6 +19,7 @@ if __name__ == '__main__':
 
     with open(out_file_name, 'w') as out_file:
         code_writer = c.CodeWriter(out_file)
+        code_writer.write_init()
         for file in all_files:
             f = open(file, 'r')
             parser = p.Parser(f)
