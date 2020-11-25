@@ -135,8 +135,8 @@ class CodeWriter:
 
     def write_init(self):
         """Writes the assembly code that effects the VM init"""
-        # self.asm_file.write('@256\nD=A\n@SP\nM=D\n')
-        # self.write_call('Sys.init', 0)
+        self.asm_file.write('@256\nD=A\n@SP\nM=D\n')
+        self.write_call('Sys.init', 0)
 
     def write_label(self, label: str):
         """Writes the assembly code that effects the label code"""
@@ -164,8 +164,7 @@ class CodeWriter:
             return '@{}\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'.format(_label)
 
         out_str = ''
-        out_str += push_calling_data('return-address')  # ATTN: will this
-        # label get created multiple times and cause collisions?
+        out_str += push_calling_data('return-{}'.format(func_name))
         out_str += push_calling_data('LCL')  # Save LCL of the calling function
         out_str += push_calling_data('ARG')  # Save ARG of the calling function
         out_str += push_calling_data('THIS')  # Save THIS of the calling function
@@ -175,25 +174,26 @@ class CodeWriter:
         self.asm_file.write(out_str)
 
         self.write_goto(func_name)
-        self.write_label('return-address')
+        self.write_label('return-{}'.format(func_name))
 
     def write_return(self):
         """Writes the assembly code that effects the return command"""
 
         def restore_caller_label(label: str, index: int) -> str:
-            """Returns the Assembly code for label = *(FRAME - index)"""
-            return '@{index}\nD=A\n@FRAME\nA=M-D\nD=M\n@{label}\nM=D\n'.format(index=index, label=label)
+            """Returns the Assembly code for label = *(frame - index)"""
+            return '@{index}\nD=A\n@frame\nA=M-D\nD=M\n@{label}\nM=D\n'.format(
+                index=index, label=label)
 
         out_str = ''
-        out_str += '@LCL\nD=M\n@FRAME\nM=D\n'  # FRAME = LCL
-        out_str += restore_caller_label('RET', 5)  # RET = *(FRAME - 5)
+        out_str += '@LCL\nD=M\n@frame\nM=D\n'  # FRAME = LCL
+        out_str += restore_caller_label('ret', 5)  # RET = *(FRAME - 5)
         out_str += ACCESS_STACK + 'D=M\n' + DECREASE_STACK_PTR + '@ARG\nA=M\nM=D\n'  # *ARG = pop()
         out_str += '@ARG\nD=M\n@SP\nM=D+1\n'  # SP = ARG + 1
         out_str += restore_caller_label('THAT', 1)  # THAT = *(FRAME - 1)
         out_str += restore_caller_label('THIS', 2)  # THIS = *(FRAME - 2)
         out_str += restore_caller_label('ARG', 3)  # ARG = *(FRAME - 3)
         out_str += restore_caller_label('LCL', 4)  # LCL = *(FRAME - 4)
-        out_str += '@RET\nA=M\n0;JMP\n'  # goto RET
+        out_str += '@ret\nA=M\n0;JMP\n'  # goto RET
         self.asm_file.write(out_str)
 
     def write_function(self, func_name: str, num_locals: int):
