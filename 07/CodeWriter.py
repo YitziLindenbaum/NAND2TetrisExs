@@ -164,7 +164,7 @@ class CodeWriter:
             return '@{}\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'.format(_label)
 
         out_str = ''
-        out_str += push_calling_data('return-{}'.format(func_name))
+        out_str += '@return-{}\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'.format(func_name)
         out_str += push_calling_data('LCL')  # Save LCL of the calling function
         out_str += push_calling_data('ARG')  # Save ARG of the calling function
         out_str += push_calling_data('THIS')  # Save THIS of the calling function
