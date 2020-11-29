@@ -32,6 +32,7 @@ class CodeWriter:
         self.vm_file = None
         self.static_ptr = 0
         self.counter = 0
+        self.recursive_counter = 0
 
     def set_file_name(self, file_name: str):
         """
@@ -164,7 +165,7 @@ class CodeWriter:
             return '@{}\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'.format(_label)
 
         out_str = ''
-        out_str += '@return-{}\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'.format(func_name)
+        out_str += '@return-{}_{}\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'.format(func_name, self.recursive_counter)
         out_str += push_calling_data('LCL')  # Save LCL of the calling function
         out_str += push_calling_data('ARG')  # Save ARG of the calling function
         out_str += push_calling_data('THIS')  # Save THIS of the calling function
@@ -174,7 +175,8 @@ class CodeWriter:
         self.asm_file.write(out_str)
 
         self.write_goto(func_name)
-        self.write_label('return-{}'.format(func_name))
+        self.write_label('return-{}_{}'.format(func_name, self.recursive_counter))
+        self.recursive_counter += 1
 
     def write_return(self):
         """Writes the assembly code that effects the return command"""
