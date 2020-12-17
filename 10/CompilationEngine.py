@@ -1,7 +1,7 @@
 NEWLINE = '\n'
+OPS = {'+', '-', '*', '/', '&', '|', '<', '>', '='}
 
 from lxml import etree as et
-
 
 class CompilationEngine:
     """
@@ -236,7 +236,14 @@ class CompilationEngine:
 
     def compile_expression(self):
         """Compiles an expression"""
-        pass
+        self._add_xml_node("expression", "", descend=True)
+
+        self.compile_term()
+        if self.tokenizer.symbol() in OPS:
+            self._add_symbol()  # binary operator
+            self.compile_term()
+
+        self.cur_node = self.cur_node.getparent()
 
     def compile_term(self):
         """
