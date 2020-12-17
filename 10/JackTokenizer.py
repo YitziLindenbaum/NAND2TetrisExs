@@ -19,9 +19,6 @@ class Token:
     def get_content(self) -> str:
         return self.content
 
-    def __str__(self):
-        return f'{self.token_type:<13} {self.content:<13}'
-
 
 class JackTokenizer:
     """
