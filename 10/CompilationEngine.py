@@ -87,7 +87,7 @@ class CompilationEngine:
         """Compiles a complete method, function, or constructor"""
         self._add_keyword()  # routine type (constructor, function, method)
 
-        if self.tokenizer.token_type == "keyword":  # routine returns built-in
+        if self.tokenizer.token_type() == "keyword":  # routine returns built-in
             self._add_keyword()                     # or void
         else:  # routine returns user-defined class
             self._add_identifier()
@@ -230,7 +230,7 @@ class CompilationEngine:
             self._add_keyword()  # "else"
             self._add_symbol()  # '{'
             self.compile_statements()
-            self._add_symbol()  # '}'
+            # self._add_symbol()  # '}'
 
         self.cur_node = self.cur_node.getparent()
 
