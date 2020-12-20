@@ -106,7 +106,7 @@ class JackTokenizer:
         """
         return self.tokens[self.current_command].get_token_type()
 
-    def key_word(self) -> str:
+    def keyword(self) -> str:
         """
         Returns the keyword which is the current token.
         Should only be called when token_type() is KEYWORD.

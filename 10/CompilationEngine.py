@@ -1,7 +1,7 @@
+from lxml import etree as et
 NEWLINE = '\n'
 OPS = {'+', '-', '*', '/', '&', '|', '<', '>', '='}
 
-from lxml import etree as et
 
 class CompilationEngine:
     """
@@ -15,7 +15,10 @@ class CompilationEngine:
         self.output_file = output_file
         self.xml_tree = None
         self.cur_node = None
+        self.root = None
         self.compile_class()
+        et.indent(self.root, space='  ')
+        self.output_file.write(str(et.tostring(self.root, pretty_print=True), 'UTF-8'))
 
     def compile_class(self):
         """Compiles a complete class"""
@@ -24,6 +27,7 @@ class CompilationEngine:
 
         self.tokenizer.advance()
         self.cur_node = et.Element("class")
+        self.root = self.cur_node
         self.xml_tree = self.cur_node
         self._add_xml_node("keyword", "class")
         self.tokenizer.advance()
@@ -69,7 +73,7 @@ class CompilationEngine:
 
         self._add_keyword()  # static or field
 
-        if self.tokenizer.token_type == "keyword":  # var is built-in type
+        if self.tokenizer.token_type() == "keyword":  # var is built-in type
             self._add_keyword()
         else:  # var is user-defined class
             self._add_identifier()
@@ -85,10 +89,11 @@ class CompilationEngine:
 
     def compile_subroutine(self):
         """Compiles a complete method, function, or constructor"""
+        self._add_xml_node('subroutineDec', '', descend=True)
         self._add_keyword()  # routine type (constructor, function, method)
 
         if self.tokenizer.token_type() == "keyword":  # routine returns built-in
-            self._add_keyword()                     # or void
+            self._add_keyword()  # or void
         else:  # routine returns user-defined class
             self._add_identifier()
 
@@ -97,6 +102,7 @@ class CompilationEngine:
         self.compile_parameter_list()
         self._add_symbol()  # ')'
 
+        self._add_xml_node('subroutineBody', '', descend=True)
         self._add_symbol()  # '{'
         while self.tokenizer.keyword() == "var":
             self.compile_var_dec()
@@ -104,12 +110,16 @@ class CompilationEngine:
         self._add_symbol()  # '}'
         self.cur_node = self.cur_node.getparent()
 
+        self.cur_node = self.cur_node.getparent()
+
     def compile_parameter_list(self):
         """Compiles a (possibly empty) parameter list, not including the enclosing '()'"""
         self._add_xml_node("parameterList", "", descend=True)
 
+        if self.tokenizer.symbol() == ')':
+            self.cur_node.text = '\n'
         while self.tokenizer.symbol() != ')':
-            if self.tokenizer.token_type == "keyword":  # arg is built-in type
+            if self.tokenizer.token_type() == "keyword":  # arg is built-in type
                 self._add_keyword()
             else:  # arg is user-defined class
                 self._add_identifier()
@@ -121,11 +131,11 @@ class CompilationEngine:
 
     def compile_var_dec(self):
         """Compiles a var declaration"""
-        self._add_xml_node("VarDec", "", descend=True)
+        self._add_xml_node("varDec", "", descend=True)
 
         self._add_keyword()  # 'var'
 
-        if self.tokenizer.token_type == "keyword":  # var is built-in type
+        if self.tokenizer.token_type() == "keyword":  # var is built-in type
             self._add_keyword()
         else:  # var is user-defined class
             self._add_identifier()
@@ -168,6 +178,7 @@ class CompilationEngine:
         self._add_symbol()  # '('
         self.compile_expression_list()
         self._add_symbol()  # ')'
+        self._add_symbol()  # ';'
 
         self.cur_node = self.cur_node.getparent()
 
@@ -230,7 +241,7 @@ class CompilationEngine:
             self._add_keyword()  # "else"
             self._add_symbol()  # '{'
             self.compile_statements()
-            # self._add_symbol()  # '}'
+            self._add_symbol()  # '}'
 
         self.cur_node = self.cur_node.getparent()
 
@@ -254,9 +265,48 @@ class CompilationEngine:
         to distinguish between the three possibilities.
         Any other token is not part of this term and should not be advanced over.
         """
-        pass
+        self._add_xml_node('term', '', descend=True)
+
+        _token_type = self.tokenizer.token_type()
+        if _token_type == 'string_const':
+            self._add_xml_node('stringConstant', self.tokenizer.string_val())
+            self.tokenizer.advance()
+        elif _token_type == 'int_const':
+            self._add_xml_node('integerConstant', self.tokenizer.int_val())
+            self.tokenizer.advance()
+        elif _token_type == 'keyword':
+            self._add_keyword()
+        elif _token_type == 'identifier':
+            self._add_identifier()
+            if self.tokenizer.symbol() == '.':  # subroutine call
+                self._add_symbol()  # '.'
+                self._add_identifier()  # func name
+                self._add_symbol()  # '('
+                self.compile_expression_list()  # params
+                self._add_symbol()  # ')'
+            elif self.tokenizer.symbol() == '[':  # array entry
+                self._add_symbol()  # '['
+                self.compile_expression()
+                self._add_symbol()  # ']'
+        elif _token_type == 'symbol':
+            if self.tokenizer.symbol() == '(':
+                self._add_symbol()  # '('
+                self.compile_expression()
+                self._add_symbol()  # ')'
+            else:
+                self._add_symbol()  # unary op
+                self.compile_term()
+
+        self.cur_node = self.cur_node.getparent()
 
     def compile_expression_list(self):
-        """Compiles a (possibly empty) comma-seperated list of expressions"""
-        pass
-
+        """Compiles a (possibly empty) comma-separated list of expressions"""
+        self._add_xml_node('expressionList', '', descend=True)
+        if self.tokenizer.symbol() != ')':  # non-empty list
+            self.compile_expression()
+            while self.tokenizer.symbol() == ',':
+                self._add_symbol()  # ','
+                self.compile_expression()
+        else:
+            self.cur_node.text = '\n'
+        self.cur_node = self.cur_node.getparent()
