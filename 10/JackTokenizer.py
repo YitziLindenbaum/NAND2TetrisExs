@@ -43,17 +43,30 @@ class JackTokenizer:
         """Translates self.file into one long string while removing comments and empty lines"""
         out_str: str = ''
         lines = self.file.readlines()
-        for line in lines:
-            full_line_comment = re.search('\A[\s]*[/*]', line)
-            mid_line_comment = re.search('(.+)([\s]*//.*)', line)
+        for line in lines:  # Remove all comments of type '//'
+            full_line_slash_comment = re.search('\A[\s]*//.*', line)
+            mid_line_comment = re.search('(.+)([\s]*[^*]//.*)', line)
             blank_line = re.search('\A[\s]+\Z', line)
-            if full_line_comment or blank_line:
+            if full_line_slash_comment or blank_line:
                 continue
             elif mid_line_comment:
                 out_str += mid_line_comment[1]
             else:
                 out_str += line
-        return out_str
+
+        new_out = ''
+        in_comment = False
+        for index, char in enumerate(out_str):
+            if not in_comment:
+                if char == '/' and out_str[index + 1] == '*':
+                    in_comment = True
+                else:
+                    new_out += char
+            else:
+                if char == '/' and out_str[index - 1] == '*':
+                    in_comment = False
+
+        return new_out
 
     def parse_file_str(self):
         """Parse self.file_str into tokens and stores them in self.tokens"""
