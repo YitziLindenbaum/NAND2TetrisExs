@@ -13,12 +13,11 @@ class CompilationEngine:
     def __init__(self, tokenizer_object, output_file):
         self.tokenizer = tokenizer_object
         self.output_file = output_file
-        self.xml_tree = None
         self.cur_node = None
         self.root = None
         self.compile_class()
-        et.indent(self.root, space='  ')
-        self.output_file.write(str(et.tostring(self.root, pretty_print=True), 'UTF-8'))
+        # et.indent(self.root, space='  ')
+        print(str(et.tostring(self.root, pretty_print=False), 'UTF-8'), file=self.output_file)
 
     def compile_class(self):
         """Compiles a complete class"""
@@ -27,8 +26,8 @@ class CompilationEngine:
 
         self.tokenizer.advance()
         self.cur_node = et.Element("class")
+        self.cur_node.text = '\n'
         self.root = self.cur_node
-        self.xml_tree = self.cur_node
         self._add_xml_node("keyword", "class")
         self.tokenizer.advance()
         self._add_identifier()
@@ -51,9 +50,12 @@ class CompilationEngine:
         :param descend: if True, changes current node to child.
         """
         new_node = et.SubElement(self.cur_node, tag)
-        new_node.text = text
+        new_node.tail = '\n'
         if descend:
+            new_node.text = '\n'
             self.cur_node = new_node
+        else:
+            new_node.text = text
 
     def _add_keyword(self):
         self._add_xml_node("keyword", self.tokenizer.keyword())
