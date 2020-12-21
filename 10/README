@@ -11,9 +11,11 @@ Yitzchak Lindenbaum, ID 336082789, yitzchak.lindenbaum@mail.huji.ac.il
 Submitted Files
 ---------------
 README - This file.
-JackAnalyzer.py -
-JackTokenizer.py -
-CompilationEngine.py -
+JackAnalyzer.py - The main driver of the program
+JackTokenizer.py - Parses the input file into a token iterator
+CompilationEngine.py - Compiles the tokens into XML
+Makefile - A makefile for this project
+JackAnalyzer - The executable file for this project
 
 Remarks
 -------
