@@ -14,7 +14,7 @@ class VMWriter:
             segment: Can be any of the strings listed in SEGMENTS
             index: An int to accompany the segment
         """
-        pass
+        self.outfile.write('push {segment} {index}\n'.format(segment=segment, index=index))
 
     def write_pop(self, segment: str, index: int):
         """
@@ -23,7 +23,7 @@ class VMWriter:
             segment: Can be any of the strings listed in SEGMENTS
             index: An int to accompany the segment
         """
-        pass
+        self.outfile.write('pop {segment} {index}\n'.format(segment=segment, index=index))
 
     def write_arithmetic(self, command: str):
         """
@@ -31,7 +31,7 @@ class VMWriter:
         Args:
             command: Can be any of the strings listed in COMMANDS
         """
-        pass
+        self.outfile.write('{command}\n'.format(command=command))
 
     def write_label(self, label: str):
         """
@@ -39,7 +39,7 @@ class VMWriter:
         Args:
             label: A string for the label
         """
-        pass
+        self.outfile.write('label {label}\n'.format(label=label))
 
     def write_goto(self, label: str):
         """
@@ -47,7 +47,7 @@ class VMWriter:
         Args:
             label: A string for the label
         """
-        pass
+        self.outfile.write('goto {label}\n'.format(label=label))
 
     def write_if(self, label: str):
         """
@@ -55,7 +55,7 @@ class VMWriter:
         Args:
             label: A string for the label
         """
-        pass
+        self.outfile.write('if-goto {label}\n'.format(label=label))
 
     def write_call(self, name: str, n_args: int):
         """
@@ -64,7 +64,7 @@ class VMWriter:
             name: A string for the name of the subroutine
             n_args: The number of arguments the subroutine accepts
         """
-        pass
+        self.outfile.write('call {name} {n_args}\n'.format(name=name, n_args=n_args))
 
     def write_function(self, name: str, n_locals: int):
         """
@@ -73,10 +73,10 @@ class VMWriter:
             name: A string for the name of the subroutine
             n_locals: The number of local variables the function has
         """
-        pass
+        self.outfile.write('function {name} {n_locals}\n'.format(name=name, n_locals=n_locals))
 
     def write_return(self):
         """
         Writes a VM return command.
         """
-        pass
+        self.outfile.write('return\n')
