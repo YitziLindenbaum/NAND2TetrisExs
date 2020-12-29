@@ -1,6 +1,17 @@
-from lxml import etree as et
+st = __import__('SymbolTable')
+vw = __import__('VMWriter')
 NEWLINE = '\n'
 OPS = {'+', '-', '*', '/', '&', '|', '<', '>', '='}
+ARG = 'arg'
+VAR = 'var'
+THIS = 'this'
+METHOD = 'method'
+STATIC = 'static'
+FIELD = 'field'
+CONSTRUCTOR = 'constructor'
+FUNCTION = 'function'
+ELSE = 'else'
+CONSTANT = 'constant'
 
 
 class CompilationEngine:
@@ -13,148 +24,109 @@ class CompilationEngine:
     def __init__(self, tokenizer_object, output_file):
         self.tokenizer = tokenizer_object
         self.output_file = output_file
-        self.cur_node = None
-        self.root = None
+        self.class_name: str = ''
+        self.symbol_table = st.SymbolTable()
+        self.vm_writer = vw.VMWriter(self.output_file)
         self.compile_class()
-        # et.indent(self.root, space='  ')
-        print(str(et.tostring(self.root, pretty_print=False), 'UTF-8'), file=self.output_file)
 
     def compile_class(self):
         """Compiles a complete class"""
         if not self.tokenizer.has_more_tokens():  # empty file (necessary?)
             return
 
-        self.tokenizer.advance()
-        self.cur_node = et.Element("class")
-        self.cur_node.text = '\n'
-        self.root = self.cur_node
-        self._add_xml_node("keyword", "class")
-        self.tokenizer.advance()
-        self._add_identifier()
-        self._add_symbol()
+        self._advance_n_times(2)  # Advance over the class keyword
+        self.class_name = self._get_next_token()
+        self._advance_n_times(1)  # Advance over the opening bracket
 
-        while self.tokenizer.keyword() in {"static", "field"}:
+        while self.tokenizer.keyword() in {STATIC, FIELD}:
             self.compile_class_var_dec()
 
-        while self.tokenizer.keyword() in {"constructor", "function",
-                                           "method"}:
+        while self.tokenizer.keyword() in {CONSTRUCTOR, FUNCTION, METHOD}:
             self.compile_subroutine()
 
-        self._add_xml_node("symbol", "}")
+        self._advance_n_times(1)  # Advance past the }
 
-    def _add_xml_node(self, tag, text, descend=False):
-        """
-        Adds an xml node to the tree as a child of current node.
-        :param tag:
-        :param text:
-        :param descend: if True, changes current node to child.
-        """
-        new_node = et.SubElement(self.cur_node, tag)
-        new_node.tail = '\n'
-        if descend:
-            new_node.text = '\n'
-            self.cur_node = new_node
-        else:
-            new_node.text = text
-
-    def _add_keyword(self):
-        self._add_xml_node("keyword", self.tokenizer.keyword())
+    def _get_next_token(self):
+        _next = self.tokenizer.identifier()
         self.tokenizer.advance()
+        return _next
 
-    def _add_identifier(self):
-        self._add_xml_node("identifier", self.tokenizer.identifier())
-        self.tokenizer.advance()
-
-    def _add_symbol(self):
-        self._add_xml_node("symbol", self.tokenizer.symbol())
-        self.tokenizer.advance()
+    def _advance_n_times(self, n=1):
+        """Advances the tokenizer n times. Default is once"""
+        for _ in range(n):
+            self.tokenizer.advance()
 
     def compile_class_var_dec(self):
-        """Compiles a static declaration or a field declaration"""
-        self._add_xml_node("classVarDec", "", descend=True)
-
-        self._add_keyword()  # static or field
-
-        if self.tokenizer.token_type() == "keyword":  # var is built-in type
-            self._add_keyword()
-        else:  # var is user-defined class
-            self._add_identifier()
-
-        self._add_identifier()  # variable name
+        """Adds all of the static and field variables to the symbol table"""
+        _kind = self._get_next_token()
+        _type = self._get_next_token()
+        _name = self._get_next_token()
 
         while self.tokenizer.symbol() == ',':  # multiple varDecs in one line
-            self._add_symbol()
-            self._add_identifier()
+            self.tokenizer.advance()  # Advance past the comma
+            self.symbol_table.define(_name, _type, _kind)
+            _name = self._get_next_token()
 
-        self._add_symbol()  # add ';'
-        self.cur_node = self.cur_node.getparent()
+        self.symbol_table.define(_name, _type, _kind)
+        self.tokenizer.advance()  # Advance past the ';'
 
     def compile_subroutine(self):
         """Compiles a complete method, function, or constructor"""
-        self._add_xml_node('subroutineDec', '', descend=True)
-        self._add_keyword()  # routine type (constructor, function, method)
+        routine_type = self._get_next_token()  # Can be constructor, function, or method
+        return_type = self._get_next_token()  # Can be a keyword (including void) or a user defined type
+        func_name = self._get_next_token()
 
-        if self.tokenizer.token_type() == "keyword":  # routine returns built-in
-            self._add_keyword()  # or void
-        else:  # routine returns user-defined class
-            self._add_identifier()
-
-        self._add_identifier()  # routine name
-        self._add_symbol()  # '('
+        self._advance_n_times(1)  # Advance past the (
+        self.symbol_table.start_subroutine()  # init the symbol table for the subroutine
+        if routine_type == METHOD:  # Include the 'this' object as the first parameter
+            self.symbol_table.define(THIS, self.class_name, ARG)
         self.compile_parameter_list()
-        self._add_symbol()  # ')'
+        self._advance_n_times(1)  # Advance past the )
 
-        self._add_xml_node('subroutineBody', '', descend=True)
-        self._add_symbol()  # '{'
-        while self.tokenizer.keyword() == "var":
+        self.vm_writer.write_function(self.class_name + '.' + func_name, self.symbol_table.var_count(ARG))
+        if routine_type == CONSTRUCTOR:
+            self.vm_writer.write_push(CONSTANT, self.symbol_table.var_count(FIELD))
+            self.vm_writer.write_call('Memory.alloc', 1)
+        elif routine_type == METHOD:
+            self.vm_writer.write_push(self.symbol_table.kind_of(THIS), self.symbol_table.index_of(THIS))
+ 
+        self._advance_n_times(1)  # Advance past the '{'
+        while self.tokenizer.keyword() == VAR:
             self.compile_var_dec()
         self.compile_statements()
-        self._add_symbol()  # '}'
-        self.cur_node = self.cur_node.getparent()
-
-        self.cur_node = self.cur_node.getparent()
+        self._advance_n_times(1)  # Advance past the '}'
 
     def compile_parameter_list(self):
         """Compiles a (possibly empty) parameter list, not including the enclosing '()'"""
-        self._add_xml_node("parameterList", "", descend=True)
-
-        if self.tokenizer.symbol() == ')':
-            self.cur_node.text = '\n'
         while self.tokenizer.symbol() != ')':
-            if self.tokenizer.token_type() == "keyword":  # arg is built-in type
-                self._add_keyword()
-            else:  # arg is user-defined class
-                self._add_identifier()
-            self._add_identifier()  # arg name
-            if self.tokenizer.symbol() == ',':
-                self._add_symbol()
+            _kind = ARG
+            _type = self._get_next_token()
+            _name = self._get_next_token()
 
-        self.cur_node = self.cur_node.getparent()
+            if self.tokenizer.symbol() == ',':
+                self._advance_n_times(1)  # Advance past the comma
+                self.symbol_table.define(_name, _type, _kind)
+                _type = self._get_next_token()
+                _name = self._get_next_token()
+
+            self.symbol_table.define(_name, _type, _kind)
 
     def compile_var_dec(self):
         """Compiles a var declaration"""
-        self._add_xml_node("varDec", "", descend=True)
-
-        self._add_keyword()  # 'var'
-
-        if self.tokenizer.token_type() == "keyword":  # var is built-in type
-            self._add_keyword()
-        else:  # var is user-defined class
-            self._add_identifier()
-
-        self._add_identifier()  # variable name
+        _kind = self._get_next_token()  # Will always be 'var'
+        _type = self._get_next_token()  # Can be either a built in or user defined
+        _name = self._get_next_token()
 
         while self.tokenizer.symbol() == ',':  # multiple varDecs in one line
-            self._add_symbol()
-            self._add_identifier()
+            self.symbol_table.define(_name, _type, _kind)
+            self._advance_n_times(1)  # Advance past the comma
+            _name = self._get_next_token()
 
-        self._add_symbol()  # add ';'
-        self.cur_node = self.cur_node.getparent()
+        self.symbol_table.define(_name, _type, _kind)
+        self._advance_n_times(1)  # Advance past the ';'
 
     def compile_statements(self):
         """Compiles a sequence of statements, not including the enclosing '()'"""
-        self._add_xml_node("statements", "", descend=True)
-
         statement_dict = {
             "do": self.compile_do,
             "let": self.compile_let,
@@ -165,29 +137,28 @@ class CompilationEngine:
         while self.tokenizer.keyword() in statement_dict:
             statement_dict[self.tokenizer.keyword()]()
 
-        self.cur_node = self.cur_node.getparent()
-
     def compile_do(self):
         """Compiles a do statements"""
-        self._add_xml_node("doStatement", "", descend=True)
-        self._add_keyword()  # "do"
-        self._add_identifier()  # name of routine, class, or var
+        self._advance_n_times(1)  # Advance over the 'do' keyword
+        func_name = self._get_next_token()
 
-        if self.tokenizer.symbol() == '.':  # was class or var
-            self._add_symbol()  # '.'
-            self._add_identifier()  # name of routine
+        if self.tokenizer.symbol() == '.':  # We are calling a method of another class or a static method of our class
+            self._advance_n_times(1)  # Advance past the '.'
+            func_name = func_name + '.' + self._get_next_token()
+            instance_call = False
+        else:  # We are calling a subroutine of the current instance
+            instance_call = True
+            func_name = self.class_name + '.' + func_name
+            self.vm_writer.write_push(self.symbol_table.kind_of(THIS), self.symbol_table.index_of(THIS))  # Push 'this' to the stack
 
-        self._add_symbol()  # '('
-        self.compile_expression_list()
-        self._add_symbol()  # ')'
-        self._add_symbol()  # ';'
+        self._advance_n_times(1)  # Advance past the '('
+        num_params = self.compile_expression_list()
+        self._advance_n_times(2)  # Advance past the ');'
 
-        self.cur_node = self.cur_node.getparent()
+        self.vm_writer.write_call(func_name, num_params + instance_call)
 
     def compile_let(self):
         """Compiles a let statement"""
-        self._add_xml_node("letStatement", "", descend=True)
-
         self._add_keyword()  # "let"
         self._add_identifier()  # var name
 
@@ -198,65 +169,45 @@ class CompilationEngine:
 
         self._add_symbol()  # '='
         self.compile_expression()
-        self._add_symbol()  # ';'
-
-        self.cur_node = self.cur_node.getparent()
+        self._advance_n_times(1)  # Advance past the ';'
 
     def compile_while(self):
         """Compiles a while statement"""
-        self._add_xml_node("whileStatement", "", descend=True)
-
         self._add_keyword()  # "while"
-        self._add_symbol()  # '('
+        self._advance_n_times(1)  # Advance past the '('
         self.compile_expression()
-        self._add_symbol()  # ')'
-        self._add_symbol()  # '{'
+        self._advance_n_times(2)  # Advance past the ) and '{'
         self.compile_statements()
-        self._add_symbol()  # '}'
-
-        self.cur_node = self.cur_node.getparent()
+        self._advance_n_times(1)  # Advance past the '}'
 
     def compile_return(self):
         """Compiles a return statement"""
-        self._add_xml_node("returnStatement", "", descend=True)
-
         self._add_keyword()  # "return"
         if not self.tokenizer.symbol() == ';':
             self.compile_expression()
-        self._add_symbol()  # ';'
-
-        self.cur_node = self.cur_node.getparent()
+        self._advance_n_times(1)  # Advance past the ';'
 
     def compile_if(self):
         """Compiles an if statement, possibly with a trailing else clause"""
-        self._add_xml_node("ifStatement", "", descend=True)
-
         self._add_keyword()  # "if"
-        self._add_symbol()  # '('
+        self._advance_n_times(1)  # Advance past the '('
         self.compile_expression()
-        self._add_symbol()  # ')'
-        self._add_symbol()  # '{'
+        self._advance_n_times(2)  # Advance past the ')' and {
         self.compile_statements()
-        self._add_symbol()  # '}'
+        self._advance_n_times(1)  # Advance past the '}'
 
-        if self.tokenizer.keyword() == "else":
+        if self.tokenizer.keyword() == ELSE:
             self._add_keyword()  # "else"
-            self._add_symbol()  # '{'
+            self._advance_n_times(1)  # Advance past the '{'
             self.compile_statements()
-            self._add_symbol()  # '}'
-
-        self.cur_node = self.cur_node.getparent()
+            self._advance_n_times(1)  # Advance past the '}'
 
     def compile_expression(self):
         """Compiles an expression"""
-        self._add_xml_node("expression", "", descend=True)
-
         self.compile_term()
         if self.tokenizer.symbol() in OPS:
             self._add_symbol()  # binary operator
             self.compile_term()
-
-        self.cur_node = self.cur_node.getparent()
 
     def compile_term(self):
         """
@@ -267,8 +218,6 @@ class CompilationEngine:
         to distinguish between the three possibilities.
         Any other token is not part of this term and should not be advanced over.
         """
-        self._add_xml_node('term', '', descend=True)
-
         _token_type = self.tokenizer.token_type()
         if _token_type == 'string_const':
             self._add_xml_node('stringConstant', self.tokenizer.string_val())
@@ -283,32 +232,30 @@ class CompilationEngine:
             if self.tokenizer.symbol() == '.':  # subroutine call
                 self._add_symbol()  # '.'
                 self._add_identifier()  # func name
-                self._add_symbol()  # '('
+                self._advance_n_times(1)  # Advance past the '('
                 self.compile_expression_list()  # params
-                self._add_symbol()  # ')'
+                self._advance_n_times(1)  # Advance past the ')'
             elif self.tokenizer.symbol() == '[':  # array entry
                 self._add_symbol()  # '['
                 self.compile_expression()
                 self._add_symbol()  # ']'
         elif _token_type == 'symbol':
             if self.tokenizer.symbol() == '(':
-                self._add_symbol()  # '('
+                self._advance_n_times(1)  # Advance past the '('
                 self.compile_expression()
-                self._add_symbol()  # ')'
+                self._advance_n_times(1)  # Advance past the ')'
             else:
                 self._add_symbol()  # unary op
                 self.compile_term()
 
-        self.cur_node = self.cur_node.getparent()
-
-    def compile_expression_list(self):
+    def compile_expression_list(self) -> int:
         """Compiles a (possibly empty) comma-separated list of expressions"""
-        self._add_xml_node('expressionList', '', descend=True)
+        num_expressions = 0
         if self.tokenizer.symbol() != ')':  # non-empty list
             self.compile_expression()
+            num_expressions += 1
             while self.tokenizer.symbol() == ',':
                 self._add_symbol()  # ','
                 self.compile_expression()
-        else:
-            self.cur_node.text = '\n'
-        self.cur_node = self.cur_node.getparent()
+                num_expressions += 1
+        return num_expressions

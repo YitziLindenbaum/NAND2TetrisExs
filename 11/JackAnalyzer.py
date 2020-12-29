@@ -4,7 +4,7 @@ from os.path import isdir, isfile, join
 jt = __import__('JackTokenizer')
 ce = __import__('CompilationEngine')
 
-XML_EXTENSION = '.xml'
+VM_EXTENSION = '.vm'
 JACK_EXTENSION = '.jack'
 
 if __name__ == '__main__':
@@ -17,6 +17,6 @@ if __name__ == '__main__':
         with open(file, 'r') as f:
             tokenizer = jt.JackTokenizer(f)
 
-        out_file_name = file.replace(JACK_EXTENSION, XML_EXTENSION)
+        out_file_name = file.replace(JACK_EXTENSION, VM_EXTENSION)
         with open(out_file_name, 'w') as out_file:
             comp_engine = ce.CompilationEngine(tokenizer, out_file)
