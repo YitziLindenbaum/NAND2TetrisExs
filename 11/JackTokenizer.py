@@ -47,19 +47,31 @@ class JackTokenizer:
             full_line_slash_comment = re.search('\A[\s]*//.*', line)
             mid_line_comment = re.search('(.+)([\s]*[^*]//.*)', line)
             blank_line = re.search('\A[\s]+\Z', line)
+            comment_in_line = re.search('(?P<string_comment>.*\".*[/]{2}.*\"[\s]*;|.*/[*].*[*]/.*\"[\s]*;)+[\s]*(?P<real_comment>/{2}.*|/[*].*[*].*)?', line)
             if full_line_slash_comment or blank_line:
                 continue
-            elif mid_line_comment:
+            elif comment_in_line:
+                out_str += comment_in_line.group('string_comment')
+            elif mid_line_comment:  # If there are a comment at the end of the line
+
                 out_str += mid_line_comment[1]
             else:
                 out_str += line
 
         new_out = ''
         in_comment = False
+        in_string = False
         for index, char in enumerate(out_str):
-            if not in_comment:
+            if in_string:
+                new_out += char
+                if char == '"':
+                    in_string = False
+            elif not in_comment:
                 if char == '/' and out_str[index + 1] == '*':
                     in_comment = True
+                elif char == '"':
+                    in_string = True
+                    new_out += char  # Toggles the in_string flag
                 else:
                     new_out += char
             else:
