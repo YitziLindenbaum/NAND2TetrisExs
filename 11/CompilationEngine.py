@@ -12,6 +12,7 @@ CONSTRUCTOR = 'constructor'
 FUNCTION = 'function'
 ELSE = 'else'
 CONSTANT = 'constant'
+POINTER = 'pointer'
 
 
 class CompilationEngine:
@@ -87,9 +88,11 @@ class CompilationEngine:
         if routine_type == CONSTRUCTOR:
             self.vm_writer.write_push(CONSTANT, self.symbol_table.var_count(FIELD))
             self.vm_writer.write_call('Memory.alloc', 1)
+            self.vm_writer.write_pop('pointer', 0)
         elif routine_type == METHOD:
             self.vm_writer.write_push(self.symbol_table.kind_of(THIS), self.symbol_table.index_of(THIS))
- 
+            self.vm_writer.write_pop(POINTER, 0)
+
         self._advance_n_times(1)  # Advance past the '{'
         while self.tokenizer.keyword() == VAR:
             self.compile_var_dec()
@@ -159,17 +162,40 @@ class CompilationEngine:
 
     def compile_let(self):
         """Compiles a let statement"""
-        self._add_keyword()  # "let"
-        self._add_identifier()  # var name
+        self._advance_n_times(1)
+        var_name = self._get_next_token()
 
-        if self.tokenizer.symbol() == '[':  # array index
+        if self.tokenizer.symbol() == '[':  # array index TODO
             self._add_symbol()  # '['
             self.compile_expression()
             self._add_symbol()  # ']'
 
-        self._add_symbol()  # '='
-        self.compile_expression()
+        self._advance_n_times(1)  # Advance past the '='
+        self.compile_expression()  # Will be responsible for pushing the value to the top of the stack
+
+        # Pop the top value of the stack into the desired variable
+        stack_kind = self.get_pointer_type_from_kind(var_name)
+        pointer_index = self.symbol_table.index_of(var_name)
+        self.vm_writer.write_pop(stack_kind, pointer_index)
+
         self._advance_n_times(1)  # Advance past the ';'
+
+    def get_pointer_type_from_kind(self, name: str):
+        """
+        Takes in the name of a variable and returns the type to be used in the stack call.
+        For instance, arg->argument and field->this
+        """
+        _kind = self.symbol_table.kind_of(name)
+        if _kind == FIELD:
+            return THIS
+        elif _kind == ARG:
+            return 'argument'
+        elif _kind == VAR:
+            return 'local'
+        elif _kind == STATIC:
+            return STATIC
+        else:
+            return None
 
     def compile_while(self):
         """Compiles a while statement"""
@@ -223,22 +249,40 @@ class CompilationEngine:
             self._add_xml_node('stringConstant', self.tokenizer.string_val())
             self.tokenizer.advance()
         elif _token_type == 'int_const':
-            self._add_xml_node('integerConstant', self.tokenizer.int_val())
-            self.tokenizer.advance()
+            self.vm_writer.write_push(CONSTANT, self._get_next_token())
         elif _token_type == 'keyword':
             self._add_keyword()
         elif _token_type == 'identifier':
-            self._add_identifier()
+            _name = self._get_next_token()
             if self.tokenizer.symbol() == '.':  # subroutine call
-                self._add_symbol()  # '.'
-                self._add_identifier()  # func name
+                self._advance_n_times(1)  # Advance past the '.'
+                func_name = self._get_next_token()
+                stack_kind = self.get_pointer_type_from_kind(_name)
+                if stack_kind:  # This is a method or a constructor
+                    self.vm_writer.write_push()  # todo push the 'this' pointer properly
                 self._advance_n_times(1)  # Advance past the '('
-                self.compile_expression_list()  # params
+                num_args = self.compile_expression_list()  # params
                 self._advance_n_times(1)  # Advance past the ')'
+                call_name = _name + '.' + func_name
+
+                if not stack_kind or func_name == 'new':  # function or constructor call (i.e not method)
+                    self.vm_writer.write_call(call_name, num_args + (func_name == 'new'))
+                else:  # a method call of another class
+                    self.vm_writer.write_push(stack_kind, self.symbol_table.index_of(_name))
+                    self.vm_writer.write_call(call_name, num_args + 1)
+
             elif self.tokenizer.symbol() == '[':  # array entry
                 self._add_symbol()  # '['
                 self.compile_expression()
                 self._add_symbol()  # ']'
+            elif self.tokenizer.symbol() == '(':  # a method of this class
+                self._advance_n_times(1)
+                num_args = self.compile_expression_list()  # params
+                self._advance_n_times(1)  # Advance past the ')'
+                call_name = self.class_name + '.' + _name
+
+                self.vm_writer.write_call(call_name, num_args)
+
         elif _token_type == 'symbol':
             if self.tokenizer.symbol() == '(':
                 self._advance_n_times(1)  # Advance past the '('

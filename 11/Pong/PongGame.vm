@@ -1,7 +1,7 @@
 function PongGame.new 0
 push constant 7
 call Memory.alloc 1
-pop pointer 0
+pop pointer 014
 call Screen.clearScreen 0
 pop temp 0
 push constant 50
