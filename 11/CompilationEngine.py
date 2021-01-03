@@ -93,6 +93,11 @@ class CompilationEngine:
         if routine_type == CONSTRUCTOR:
             self.vm_writer.write_push(CONSTANT, self.symbol_table.var_count(FIELD))
             self.vm_writer.write_call('Memory.alloc', 1)
+            self.vm_writer.write_pop(POINTER, 0)  # anchor 'this' at memory
+            # block returned by alloc
+            # todo: constructor will end with Jack code "return this" --
+            #  make sure this is handled properly by compile_term (should
+            #  compile to "push pointer 0 / return")
 
         elif routine_type == METHOD:
             self.vm_writer.write_push(self.symbol_table.kind_of(THIS), self.symbol_table.index_of(THIS))
@@ -164,6 +169,7 @@ class CompilationEngine:
         self._advance_n_times(2)  # Advance past the ');'
 
         self.vm_writer.write_call(func_name, num_params + instance_call)
+        self.vm_writer.write_pop('temp', 0)
 
     def compile_let(self):
         """Compiles a let statement"""
@@ -287,24 +293,33 @@ class CompilationEngine:
         elif _token_type == 'int_const':
             self.vm_writer.write_push(CONSTANT, self._get_next_token())
         elif _token_type == 'keyword':
-            self._add_keyword()
+            if self._get_next_token() == 'true':  # place -1 on top of stack
+                self.vm_writer.write_push(CONSTANT, 1)
+                self.vm_writer.write_arithmetic('neg')
+            elif self._get_next_token() in {'null', 'false'}:
+                self.vm_writer.write_push(CONSTANT, 0)
+            elif self._get_next_token() == 'this':
+                self.vm_writer.write_push(POINTER, 0)
         elif _token_type == 'identifier':
             _name = self._get_next_token()
             if self.tokenizer.symbol() == '.':  # subroutine call
                 self._advance_n_times(1)  # Advance past the '.'
                 func_name = self._get_next_token()
-                stack_kind = self.get_pointer_type_from_kind(_name)
-                if stack_kind:  # This is a method or a constructor
-                    self.vm_writer.write_push()  # todo push the 'this' pointer properly
+                stack_kind = self.symbol_table.get_pointer_type_from_kind(
+                    _name)
+                if stack_kind:  # This is a method
+                    self.vm_writer.write_push(
+                        self.symbol_table.get_pointer_type_from_kind(_name),
+                        self.symbol_table.index_of(_name))
+
                 self._advance_n_times(1)  # Advance past the '('
                 num_args = self.compile_expression_list()  # params
                 self._advance_n_times(1)  # Advance past the ')'
                 call_name = _name + '.' + func_name
 
-                if not stack_kind or func_name == 'new':  # function or constructor call (i.e not method)
-                    self.vm_writer.write_call(call_name, num_args + (func_name == 'new'))
+                if not stack_kind:  # function or constructor call (i.e not method)
+                    self.vm_writer.write_call(call_name, num_args)
                 else:  # a method call of another class
-                    self.vm_writer.write_push(stack_kind, self.symbol_table.index_of(_name))
                     self.vm_writer.write_call(call_name, num_args + 1)
 
             elif self.tokenizer.symbol() == '[':  # array entry
@@ -328,14 +343,21 @@ class CompilationEngine:
 
                 self.vm_writer.write_call(call_name, num_args)
 
+            else:
+                self.vm_writer.write_push(
+                    self.symbol_table.get_pointer_type_from_kind(_name),
+                    self.symbol_table.index_of(_name))
+
         elif _token_type == 'symbol':
             if self.tokenizer.symbol() == '(':
                 self._advance_n_times(1)  # Advance past the '('
                 self.compile_expression()
                 self._advance_n_times(1)  # Advance past the ')'
             else:
-                self._add_symbol()  # unary op
+                op = self._get_next_token()
                 self.compile_term()
+                self.vm_writer.write_arithmetic(op)  # unary op
+
 
     def compile_expression_list(self) -> int:
         """Compiles a (possibly empty) comma-separated list of expressions"""
