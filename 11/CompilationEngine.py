@@ -88,7 +88,7 @@ class CompilationEngine:
         if routine_type == CONSTRUCTOR:
             self.vm_writer.write_push(CONSTANT, self.symbol_table.var_count(FIELD))
             self.vm_writer.write_call('Memory.alloc', 1)
-            self.vm_writer.write_pop('pointer', 0)
+
         elif routine_type == METHOD:
             self.vm_writer.write_push(self.symbol_table.kind_of(THIS), self.symbol_table.index_of(THIS))
             self.vm_writer.write_pop(POINTER, 0)
@@ -179,23 +179,6 @@ class CompilationEngine:
         self.vm_writer.write_pop(stack_kind, pointer_index)
 
         self._advance_n_times(1)  # Advance past the ';'
-
-    def get_pointer_type_from_kind(self, name: str):
-        """
-        Takes in the name of a variable and returns the type to be used in the stack call.
-        For instance, arg->argument and field->this
-        """
-        _kind = self.symbol_table.kind_of(name)
-        if _kind == FIELD:
-            return THIS
-        elif _kind == ARG:
-            return 'argument'
-        elif _kind == VAR:
-            return 'local'
-        elif _kind == STATIC:
-            return STATIC
-        else:
-            return None
 
     def compile_while(self):
         """Compiles a while statement"""

@@ -3,6 +3,7 @@ FIELD = 'field'
 ARG = 'arg'
 VAR = 'var'
 NONE = 'none'
+THIS = 'this'
 KIND = {STATIC, FIELD, ARG, VAR}
 
 
@@ -92,3 +93,20 @@ class SymbolTable:
             return self.subroutine_scope[_name][2]
         elif _name in self.class_scope:
             return self.class_scope[_name][2]
+
+    def get_pointer_type_from_kind(self, _name: str):
+        """
+        Takes in the name of a variable and returns the type to be used in the stack call.
+        For instance, arg->argument and field->this
+        """
+        _kind = self.kind_of(_name)
+        if _kind == FIELD:
+            return THIS
+        elif _kind == ARG:
+            return 'argument'
+        elif _kind == VAR:
+            return 'local'
+        elif _kind == STATIC:
+            return STATIC
+        else:
+            return None
