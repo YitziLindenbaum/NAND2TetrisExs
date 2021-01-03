@@ -3,8 +3,12 @@ vw = __import__('VMWriter')
 NEWLINE = '\n'
 OPS = {'+', '-', '*', '/', '&', '|', '<', '>', '='}
 ARG = 'arg'
+NOT = 'not'
 VAR = 'var'
+ADD = 'add'
 THIS = 'this'
+THAT = 'that'
+TEMP = 'temp'
 METHOD = 'method'
 STATIC = 'static'
 FIELD = 'field'
@@ -166,18 +170,31 @@ class CompilationEngine:
         self._advance_n_times(1)
         var_name = self._get_next_token()
 
-        if self.tokenizer.symbol() == '[':  # array index TODO
-            self._add_symbol()  # '['
-            self.compile_expression()
-            self._add_symbol()  # ']'
+        array = False
+        if self.tokenizer.symbol() == '[':
+            # This section will calculate the base pointer of the array plus the index and store it on top of the stack
+            array = True
+            self._advance_n_times(1)  # Advance past the [
+            self.compile_expression()  # Leaves the desired index at the top of the stack
+            self.vm_writer.write_push(self.symbol_table.get_pointer_type_from_kind(var_name), self.symbol_table.index_of(var_name))
+            self.vm_writer.write_arithmetic(ADD)
+            self._advance_n_times(1)  # Advance past the ]
 
         self._advance_n_times(1)  # Advance past the '='
-        self.compile_expression()  # Will be responsible for pushing the value to the top of the stack
+        self.compile_expression()  # Is responsible for pushing the value to the top of the stack
 
-        # Pop the top value of the stack into the desired variable
-        stack_kind = self.get_pointer_type_from_kind(var_name)
-        pointer_index = self.symbol_table.index_of(var_name)
-        self.vm_writer.write_pop(stack_kind, pointer_index)
+        if array:
+            # This section will store the value we wish to insert into the array into temp.
+            # Then it will retrieve the address calculated above and store it in pointer
+            # Then it will return the value to the top of the stack and then write it to the array
+            self.vm_writer.write_pop(TEMP, 0)
+            self.vm_writer.write_pop(POINTER, 1)
+            self.vm_writer.write_push(TEMP, 0)
+            self.vm_writer.write_pop(THAT, 0)
+        else:
+            stack_kind = self.symbol_table.get_pointer_type_from_kind(var_name)
+            pointer_index = self.symbol_table.index_of(var_name)
+            self.vm_writer.write_pop(stack_kind, pointer_index)
 
         self._advance_n_times(1)  # Advance past the ';'
 
@@ -190,7 +207,7 @@ class CompilationEngine:
         self._advance_n_times(1)  # Advance past the '('
 
         self.compile_expression()  # Leaves cond on top of the stack
-        self.vm_writer.write_arithmetic('not')  # Leaves ~(cond) on top of the stack
+        self.vm_writer.write_arithmetic(NOT)  # Leaves ~(cond) on top of the stack
         self.vm_writer.write_if(l2)  # Check to see if we should exit the loop or not
 
         self._advance_n_times(2)  # Advance past the ) and '{'
@@ -229,7 +246,7 @@ class CompilationEngine:
 
         self._advance_n_times(1)  # Advance past the '('
         self.compile_expression()  # Leaves the condition on top of the stack
-        self.vm_writer.write_arithmetic('not')  # Leaves ~(cond) on top of the stack
+        self.vm_writer.write_arithmetic(NOT)  # Leaves ~(cond) on top of the stack
         self.vm_writer.write_if(l1)
 
         self._advance_n_times(2)  # Advance past the ')' and {
@@ -291,9 +308,18 @@ class CompilationEngine:
                     self.vm_writer.write_call(call_name, num_args + 1)
 
             elif self.tokenizer.symbol() == '[':  # array entry
-                self._add_symbol()  # '['
+                # Order of operations:
+                # 1. Evaluate the expression within the brackets
+                # 2. Calculate base_address + resultant of step 1, and store on top of stack
+                # 3. Move address to the 'that' section of the 'pointer' segment
+                # 4. Push the value in the array onto the top of the stack
+                self._advance_n_times(1)  # Advance over the [
                 self.compile_expression()
-                self._add_symbol()  # ']'
+                self.vm_writer.write_push(self.symbol_table.get_pointer_type_from_kind(_name), self.symbol_table.index_of(_name))
+                self.vm_writer.write_arithmetic(ADD)
+                self.vm_writer.write_pop(POINTER, 1)
+                self.vm_writer.write_push(THAT, 0)
+                self._advance_n_times(1)  # Advance over the ]
             elif self.tokenizer.symbol() == '(':  # a method of this class
                 self._advance_n_times(1)
                 num_args = self.compile_expression_list()  # params
@@ -318,7 +344,7 @@ class CompilationEngine:
             self.compile_expression()
             num_expressions += 1
             while self.tokenizer.symbol() == ',':
-                self._add_symbol()  # ','
+                self._advance_n_times(1)  # Advance over the comma
                 self.compile_expression()
                 num_expressions += 1
         return num_expressions
