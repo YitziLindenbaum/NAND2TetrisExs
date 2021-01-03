@@ -26,6 +26,7 @@ class CompilationEngine:
         self.tokenizer = tokenizer_object
         self.output_file = output_file
         self.class_name: str = ''
+        self.if_counter: int = 0
         self.symbol_table = st.SymbolTable()
         self.vm_writer = vw.VMWriter(self.output_file)
         self.compile_class()
@@ -182,41 +183,77 @@ class CompilationEngine:
 
     def compile_while(self):
         """Compiles a while statement"""
-        self._add_keyword()  # "while"
+        l1 = self._get_if_label()
+        l2 = self._get_if_label()
+
+        self.vm_writer.write_label(l1)
         self._advance_n_times(1)  # Advance past the '('
-        self.compile_expression()
+
+        self.compile_expression()  # Leaves cond on top of the stack
+        self.vm_writer.write_arithmetic('not')  # Leaves ~(cond) on top of the stack
+        self.vm_writer.write_if(l2)  # Check to see if we should exit the loop or not
+
         self._advance_n_times(2)  # Advance past the ) and '{'
-        self.compile_statements()
+        self.compile_statements()  # Execute the code in the loop
+        self.vm_writer.write_goto(l1)  # Iterate one more time over the loop
+
+        self.vm_writer.write_label(l2)
         self._advance_n_times(1)  # Advance past the '}'
 
     def compile_return(self):
         """Compiles a return statement"""
-        self._add_keyword()  # "return"
-        if not self.tokenizer.symbol() == ';':
-            self.compile_expression()
+        if self.tokenizer.symbol() != ';':  # If there is a return value
+            self.compile_expression()  # Leaves the return value on top of the stack
+        else:  # If the function returns void
+            self.vm_writer.write_push(CONSTANT, 0)
+        self.vm_writer.write_return()
         self._advance_n_times(1)  # Advance past the ';'
+
+    def _get_if_label(self) -> str:
+        label = 'if_' + str(self.if_counter)
+        self.if_counter += 1
+        return label
+
+    def compile_string_constant(self, string: str):
+        """Accepts a string constant as an argument and write the VM code to compile it"""
+        self.vm_writer.write_push(CONSTANT, len(string))
+        self.vm_writer.write_call('String.new', 1)
+        for char in string:
+            self.vm_writer.write_push(CONSTANT, ord(char))
+            self.vm_writer.write_call('String.appendChar', 2)
 
     def compile_if(self):
         """Compiles an if statement, possibly with a trailing else clause"""
-        self._add_keyword()  # "if"
+        l1 = self._get_if_label()
+        l2 = self._get_if_label()
+
         self._advance_n_times(1)  # Advance past the '('
-        self.compile_expression()
+        self.compile_expression()  # Leaves the condition on top of the stack
+        self.vm_writer.write_arithmetic('not')  # Leaves ~(cond) on top of the stack
+        self.vm_writer.write_if(l1)
+
         self._advance_n_times(2)  # Advance past the ')' and {
-        self.compile_statements()
+        self.compile_statements()  # Execute the code in the if statement
         self._advance_n_times(1)  # Advance past the '}'
 
         if self.tokenizer.keyword() == ELSE:
-            self._add_keyword()  # "else"
+            self.vm_writer.write_goto(l2)
+
+        self.vm_writer.write_label(l1)
+
+        if self.tokenizer.keyword() == ELSE:
             self._advance_n_times(1)  # Advance past the '{'
-            self.compile_statements()
+            self.compile_statements()  # Execute the code in the else statement
             self._advance_n_times(1)  # Advance past the '}'
+            self.vm_writer.write_label(l2)
 
     def compile_expression(self):
         """Compiles an expression"""
         self.compile_term()
         if self.tokenizer.symbol() in OPS:
-            self._add_symbol()  # binary operator
-            self.compile_term()
+            operator = self._get_next_token()  # binary operator
+            self.compile_term()  # Leaves the second operand on top of the stack
+            self.vm_writer.write_arithmetic(operator)
 
     def compile_term(self):
         """
@@ -229,8 +266,7 @@ class CompilationEngine:
         """
         _token_type = self.tokenizer.token_type()
         if _token_type == 'string_const':
-            self._add_xml_node('stringConstant', self.tokenizer.string_val())
-            self.tokenizer.advance()
+            self.compile_string_constant(self._get_next_token())
         elif _token_type == 'int_const':
             self.vm_writer.write_push(CONSTANT, self._get_next_token())
         elif _token_type == 'keyword':
