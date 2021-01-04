@@ -330,6 +330,7 @@ class CompilationEngine:
                 stack_kind = self.symbol_table.get_pointer_type_from_kind(
                     _name)
                 if stack_kind:  # This is a method
+
                     self.vm_writer.write_push(
                         self.symbol_table.get_pointer_type_from_kind(_name),
                         self.symbol_table.index_of(_name))
@@ -342,6 +343,7 @@ class CompilationEngine:
                 if not stack_kind:  # function or constructor call (i.e not method)
                     self.vm_writer.write_call(call_name, num_args)
                 else:  # a method call of another class
+                    call_name = self.symbol_table.type_of(_name) + '.' + func_name
                     self.vm_writer.write_call(call_name, num_args + 1)
 
             elif self.tokenizer.symbol() == '[':  # array entry
