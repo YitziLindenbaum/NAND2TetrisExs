@@ -65,7 +65,7 @@ push constant 0
 pop this 5
 push pointer 0
 return
-function PongGame.dispose 0
+function PongGame.dispose 1
 push argument 0
 pop pointer 0
 push this 0
@@ -87,15 +87,15 @@ return
 function PongGame.getInstance 0
 push static 0
 return
-function PongGame.run 1
+function PongGame.run 2
 push argument 0
 pop pointer 0
-label WHILE_EXP0
+label if_0
 push this 3
 not
 not
-if-goto WHILE_END0
-label WHILE_EXP1
+if-goto if_1
+label if_2
 push local 0
 push constant 0
 eq
@@ -103,7 +103,7 @@ push this 3
 not
 and
 not
-if-goto WHILE_END1
+if-goto if_3
 call Keyboard.keyPressed 0
 pop local 0
 push this 0
@@ -115,45 +115,42 @@ pop temp 0
 push constant 50
 call Sys.wait 1
 pop temp 0
-goto WHILE_EXP1
-label WHILE_END1
+goto if_2
+label if_3
 push local 0
 push constant 130
 eq
-if-goto IF_TRUE0
-goto IF_FALSE0
-label IF_TRUE0
+not
+if-goto if_4
 push this 0
 push constant 1
 call Bat.setDirection 2
 pop temp 0
-goto IF_END0
-label IF_FALSE0
+goto if_5
+label if_4
 push local 0
 push constant 132
 eq
-if-goto IF_TRUE1
-goto IF_FALSE1
-label IF_TRUE1
+not
+if-goto if_6
 push this 0
 push constant 2
 call Bat.setDirection 2
 pop temp 0
-goto IF_END1
-label IF_FALSE1
+goto if_7
+label if_6
 push local 0
 push constant 140
 eq
-if-goto IF_TRUE2
-goto IF_FALSE2
-label IF_TRUE2
-push constant 0
 not
+if-goto if_8
+push constant 1
+neg
 pop this 3
-label IF_FALSE2
-label IF_END1
-label IF_END0
-label WHILE_EXP2
+label if_8
+label if_7
+label if_5
+label if_10
 push local 0
 push constant 0
 eq
@@ -162,7 +159,7 @@ push this 3
 not
 and
 not
-if-goto WHILE_END2
+if-goto if_11
 call Keyboard.keyPressed 0
 pop local 0
 push this 0
@@ -174,14 +171,13 @@ pop temp 0
 push constant 50
 call Sys.wait 1
 pop temp 0
-goto WHILE_EXP2
-label WHILE_END2
-goto WHILE_EXP0
-label WHILE_END0
+goto if_10
+label if_11
+goto if_0
+label if_1
 push this 3
-if-goto IF_TRUE3
-goto IF_FALSE3
-label IF_TRUE3
+not
+if-goto if_12
 push constant 10
 push constant 27
 call Output.moveCursor 2
@@ -208,14 +204,14 @@ push constant 114
 call String.appendChar 2
 call Output.printString 1
 pop temp 0
-label IF_FALSE3
+label if_12
 push constant 0
 return
-function PongGame.moveBall 5
+function PongGame.moveBall 6
 push argument 0
 pop pointer 0
 push this 1
-call Ball.move 1
+call ball.move 1
 pop this 2
 push this 2
 push constant 0
@@ -225,31 +221,29 @@ push this 5
 eq
 not
 and
-if-goto IF_TRUE0
-goto IF_FALSE0
-label IF_TRUE0
+not
+if-goto if_14
 push this 2
 pop this 5
 push constant 0
 pop local 0
 push this 0
-call Bat.getLeft 1
+call bat.getLeft 1
 pop local 1
 push this 0
-call Bat.getRight 1
+call bat.getRight 1
 pop local 2
 push this 1
-call Ball.getLeft 1
+call ball.getLeft 1
 pop local 3
 push this 1
-call Ball.getRight 1
+call ball.getRight 1
 pop local 4
 push this 2
 push constant 4
 eq
-if-goto IF_TRUE1
-goto IF_FALSE1
-label IF_TRUE1
+not
+if-goto if_16
 push local 1
 push local 4
 gt
@@ -260,34 +254,31 @@ or
 pop this 3
 push this 3
 not
-if-goto IF_TRUE2
-goto IF_FALSE2
-label IF_TRUE2
+not
+if-goto if_18
 push local 4
 push local 1
 push constant 10
 add
 lt
-if-goto IF_TRUE3
-goto IF_FALSE3
-label IF_TRUE3
+not
+if-goto if_20
 push constant 1
-neg
+sub
 pop local 0
-goto IF_END3
-label IF_FALSE3
+goto if_21
+label if_20
 push local 3
 push local 2
 push constant 10
 sub
 gt
-if-goto IF_TRUE4
-goto IF_FALSE4
-label IF_TRUE4
+not
+if-goto if_22
 push constant 1
 pop local 0
-label IF_FALSE4
-label IF_END3
+label if_22
+label if_21
 push this 6
 push constant 2
 sub
@@ -307,12 +298,12 @@ pop temp 0
 push this 4
 call Output.printInt 1
 pop temp 0
-label IF_FALSE2
-label IF_FALSE1
+label if_18
+label if_16
 push this 1
 push local 0
 call Ball.bounce 2
 pop temp 0
-label IF_FALSE0
+label if_14
 push constant 0
 return

@@ -117,7 +117,7 @@ class CompilationEngine:
             #  compile to "push pointer 0 / return")
 
         elif routine_type == METHOD:
-            self.vm_writer.write_push(self.symbol_table.kind_of(THIS), self.symbol_table.index_of(THIS))
+            self.vm_writer.write_push(self.symbol_table.get_pointer_type_from_kind(THIS), self.symbol_table.index_of(THIS))
             self.vm_writer.write_pop(POINTER, 0)
 
         self.compile_statements()
@@ -130,7 +130,7 @@ class CompilationEngine:
             _type = self._get_next_token()
             _name = self._get_next_token()
 
-            if self.tokenizer.symbol() == ',':
+            while self.tokenizer.symbol() == ',':
                 self._advance_n_times(1)  # Advance past the comma
                 self.symbol_table.define(_name, _type, _kind)
                 _type = self._get_next_token()
@@ -182,7 +182,7 @@ class CompilationEngine:
         else:  # We are calling a subroutine of the current instance
             instance_call = True
             call_name = self.class_name + '.' + func_name
-            self.vm_writer.write_push(self.symbol_table.kind_of(THIS), self.symbol_table.index_of(THIS))  # Push 'this' to the stack
+            self.vm_writer.write_push(POINTER, 0)
 
         self._advance_n_times(1)  # Advance past the '('
         num_params = self.compile_expression_list()
@@ -286,7 +286,7 @@ class CompilationEngine:
         self.vm_writer.write_label(l1)
 
         if self.tokenizer.keyword() == ELSE:
-            self._advance_n_times(1)  # Advance past the '{'
+            self._advance_n_times(2)  # Advance past the '{'
             self.compile_statements()  # Execute the code in the else statement
             self._advance_n_times(1)  # Advance past the '}'
             self.vm_writer.write_label(l2)
@@ -362,8 +362,7 @@ class CompilationEngine:
                 num_args = self.compile_expression_list()  # params
                 self._advance_n_times(1)  # Advance past the ')'
                 call_name = self.class_name + '.' + _name
-
-                self.vm_writer.write_call(call_name, num_args)
+                self.vm_writer.write_call(call_name, num_args + 1)
 
             else:
                 self.vm_writer.write_push(

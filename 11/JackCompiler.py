@@ -4,7 +4,7 @@ from os.path import isdir, isfile, join
 jt = __import__('JackTokenizer')
 ce = __import__('CompilationEngine')
 
-VM_EXTENSION = '1.vm'
+VM_EXTENSION = '.vm'
 JACK_EXTENSION = '.jack'
 
 if __name__ == '__main__':
