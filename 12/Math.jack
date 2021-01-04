@@ -9,28 +9,72 @@
  */
 class Math {
 
+    field Array twoToThe;
+
     /** Initializes the library. */
     function void init() {
+        let twoTwoThe = Array.new(16);
+        var int i, curr;
+        let i = 0, curr = 1;
+        while (i < 16) {
+            twoToThe[i] = curr;
+            curr = curr * 2;
+            i = i + 1;
+        }
     }
 
     /** Returns the absolute value of x. */
     function int abs(int x) {
+        if (x < 0) {
+            x = -x;
+        }
+        return x;
     }
 
-    /** Returns the product of x and y. 
-     *  When a Jack compiler detects the multiplication operator '*' in the 
+    method int bit(int x, int j) {
+    }
+
+    /** Returns the product of x and y.
+     *  When a Jack compiler detects the multiplication operator '*' in the
      *  program's code, it handles it by invoking this method. In other words,
      *  the Jack expressions x*y and multiply(x,y) return the same value.
      */
     function int multiply(int x, int y) {
+        if (x < 0) {
+            x = abs(x);
+        }
+        if (y < 0) {
+            y = abs(y);
+        }
+        var int sum, shiftedX, j;
+        let sum = 0, j = 0;
+        let shiftedX = x;
+        while (j < 16) {
+            if (bit(y, j)) {
+                sum = sum + shiftedX;
+            }
+            shiftedX = shiftedX + shiftedX;
+        }
+        return sum;
     }
 
     /** Returns the integer part of x/y.
-     *  When a Jack compiler detects the multiplication operator '/' in the 
+     *  When a Jack compiler detects the multiplication operator '/' in the
      *  program's code, it handles it by invoking this method. In other words,
      *  the Jack expressions x/y and divide(x,y) return the same value.
      */
     function int divide(int x, int y) {
+        if (y > x) {
+            return 0;
+        }
+        var int q;
+        let q = divide(x, 2 * y);
+        if (x - ((2 * q) * y) < y) {
+            return 2 * q;
+        }
+        else {
+            return (2 * q) + 1;
+        }
     }
 
     /** Returns the integer part of the square root of x. */
@@ -39,9 +83,17 @@ class Math {
 
     /** Returns the greater number. */
     function int max(int a, int b) {
+        if (a < b) {
+            return b;
+        }
+        return a;
     }
 
     /** Returns the smaller number. */
     function int min(int a, int b) {
+        if (a < b) {
+            return a;
+        }
+        return b;
     }
 }

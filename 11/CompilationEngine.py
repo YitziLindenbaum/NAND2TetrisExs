@@ -1,7 +1,19 @@
 st = __import__('SymbolTable')
 vw = __import__('VMWriter')
+
 NEWLINE = '\n'
-OPS = {'+', '-', '*', '/', '&', '|', '<', '>', '='}
+OPS = {
+    '+': 'add',
+    '-': 'sub',
+    '*': 'call Math.multiply 2',
+    '/': 'call Math.divide 2',
+    '&': 'and',
+    '|': 'or',
+    '<': 'lt',
+    '>': 'gt',
+    '=': 'eq',
+    '~': 'not'
+}
 ARG = 'arg'
 NOT = 'not'
 VAR = 'var'
@@ -89,7 +101,12 @@ class CompilationEngine:
         self.compile_parameter_list()
         self._advance_n_times(1)  # Advance past the )
 
-        self.vm_writer.write_function(self.class_name + '.' + func_name, self.symbol_table.var_count(ARG))
+        self._advance_n_times(1)  # Advance past the '{'
+        while self.tokenizer.keyword() == VAR:
+            self.compile_var_dec()
+
+        num_vars = self.symbol_table.var_count(ARG) + self.symbol_table.var_count(VAR)
+        self.vm_writer.write_function(self.class_name + '.' + func_name, num_vars)
         if routine_type == CONSTRUCTOR:
             self.vm_writer.write_push(CONSTANT, self.symbol_table.var_count(FIELD))
             self.vm_writer.write_call('Memory.alloc', 1)
@@ -103,9 +120,6 @@ class CompilationEngine:
             self.vm_writer.write_push(self.symbol_table.kind_of(THIS), self.symbol_table.index_of(THIS))
             self.vm_writer.write_pop(POINTER, 0)
 
-        self._advance_n_times(1)  # Advance past the '{'
-        while self.tokenizer.keyword() == VAR:
-            self.compile_var_dec()
         self.compile_statements()
         self._advance_n_times(1)  # Advance past the '}'
 
@@ -156,19 +170,25 @@ class CompilationEngine:
         func_name = self._get_next_token()
 
         if self.tokenizer.symbol() == '.':  # We are calling a method of another class or a static method of our class
-            self._advance_n_times(1)  # Advance past the '.'
-            func_name = func_name + '.' + self._get_next_token()
             instance_call = False
+            self._advance_n_times(1)  # Advance past the '.'
+            _kind = self.symbol_table.get_pointer_type_from_kind(func_name)
+            new_func_name = self._get_next_token()
+            if _kind:
+                self.vm_writer.write_push(_kind, self.symbol_table.index_of(func_name))
+                func_name = self.symbol_table.type_of(func_name)
+                instance_call = True
+            call_name = func_name + '.' + new_func_name
         else:  # We are calling a subroutine of the current instance
             instance_call = True
-            func_name = self.class_name + '.' + func_name
+            call_name = self.class_name + '.' + func_name
             self.vm_writer.write_push(self.symbol_table.kind_of(THIS), self.symbol_table.index_of(THIS))  # Push 'this' to the stack
 
         self._advance_n_times(1)  # Advance past the '('
         num_params = self.compile_expression_list()
         self._advance_n_times(2)  # Advance past the ');'
 
-        self.vm_writer.write_call(func_name, num_params + instance_call)
+        self.vm_writer.write_call(call_name, num_params + instance_call)
         self.vm_writer.write_pop('temp', 0)
 
     def compile_let(self):
@@ -216,7 +236,7 @@ class CompilationEngine:
         self.vm_writer.write_arithmetic(NOT)  # Leaves ~(cond) on top of the stack
         self.vm_writer.write_if(l2)  # Check to see if we should exit the loop or not
 
-        self._advance_n_times(2)  # Advance past the ) and '{'
+        self._advance_n_times(1)  # Advance past the '{'
         self.compile_statements()  # Execute the code in the loop
         self.vm_writer.write_goto(l1)  # Iterate one more time over the loop
 
@@ -225,6 +245,7 @@ class CompilationEngine:
 
     def compile_return(self):
         """Compiles a return statement"""
+        self._advance_n_times(1)  # Advance over the 'return' keyword
         if self.tokenizer.symbol() != ';':  # If there is a return value
             self.compile_expression()  # Leaves the return value on top of the stack
         else:  # If the function returns void
@@ -255,7 +276,7 @@ class CompilationEngine:
         self.vm_writer.write_arithmetic(NOT)  # Leaves ~(cond) on top of the stack
         self.vm_writer.write_if(l1)
 
-        self._advance_n_times(2)  # Advance past the ')' and {
+        self._advance_n_times(1)  # Advance past the ')' and {
         self.compile_statements()  # Execute the code in the if statement
         self._advance_n_times(1)  # Advance past the '}'
 
@@ -273,10 +294,10 @@ class CompilationEngine:
     def compile_expression(self):
         """Compiles an expression"""
         self.compile_term()
-        if self.tokenizer.symbol() in OPS:
+        if self.tokenizer.symbol() in OPS.keys():
             operator = self._get_next_token()  # binary operator
             self.compile_term()  # Leaves the second operand on top of the stack
-            self.vm_writer.write_arithmetic(operator)
+            self.vm_writer.write_arithmetic(OPS[operator])
 
     def compile_term(self):
         """
@@ -293,12 +314,13 @@ class CompilationEngine:
         elif _token_type == 'int_const':
             self.vm_writer.write_push(CONSTANT, self._get_next_token())
         elif _token_type == 'keyword':
-            if self._get_next_token() == 'true':  # place -1 on top of stack
+            next_token = self._get_next_token()
+            if next_token == 'true':  # place -1 on top of stack
                 self.vm_writer.write_push(CONSTANT, 1)
                 self.vm_writer.write_arithmetic('neg')
-            elif self._get_next_token() in {'null', 'false'}:
+            elif next_token in {'null', 'false'}:
                 self.vm_writer.write_push(CONSTANT, 0)
-            elif self._get_next_token() == 'this':
+            elif next_token == 'this':
                 self.vm_writer.write_push(POINTER, 0)
         elif _token_type == 'identifier':
             _name = self._get_next_token()
@@ -356,7 +378,7 @@ class CompilationEngine:
             else:
                 op = self._get_next_token()
                 self.compile_term()
-                self.vm_writer.write_arithmetic(op)  # unary op
+                self.vm_writer.write_arithmetic(OPS[op])  # unary op
 
 
     def compile_expression_list(self) -> int:
