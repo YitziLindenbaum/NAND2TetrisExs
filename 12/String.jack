@@ -48,8 +48,10 @@ class String {
 
     /** Appends c to this string's end and returns this string. */
     method String appendChar(char c) {
-        string[current_len] = c;
-        current_len = current_len + 1;
+        if (current_len < maxLength) {
+            string[current_len] = c;
+            current_len = current_len + 1;
+        }
         return string;
     }
 
@@ -65,7 +67,7 @@ class String {
         var int v, i, d;
         let v = 0;
         let i = 0;
-        while ((i < surrent_len) & (string[i] < 58) & (string[i] > 47)) {
+        while ((i < current_len) & (string[i] < 58) & (string[i] > 47)) {
             let d = string[i] - 48;
             let v = (v * 10) + d;
         }
@@ -80,8 +82,8 @@ class String {
 
     method String intToString(int val) {
         var int last_digit;
-        let last_digit = modulo(val, 10);
         var char c;
+        let last_digit = modulo(val, 10);
         let c = last_digit + 48;
         if (val < 10) {
             return c;

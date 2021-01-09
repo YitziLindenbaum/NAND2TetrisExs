@@ -15,10 +15,11 @@ class Math {
     function void init() {
         var int i, curr;
         let twoToThe = Array.new(16);
-        let i = 0, curr = 1;
+        let i = 0;
+        let curr = 1;
         while (i < 16) {
             let twoToThe[i] = curr;
-            let curr = curr * 2;
+            let curr = curr + curr;
             let i = i + 1;
         }
         return;
@@ -27,7 +28,7 @@ class Math {
     /** Returns the absolute value of x. */
     function int abs(int x) {
         if (x < 0) {
-            x = -x;
+            let x = -x;
         }
         return x;
     }
@@ -45,20 +46,22 @@ class Math {
      *  the Jack expressions x*y and multiply(x,y) return the same value.
      */
     function int multiply(int x, int y) {
+        var int sum, shiftedX, j;
         if (x < 0) {
-            x = abs(x);
+            let x = Math.abs(x);
         }
         if (y < 0) {
-            y = abs(y);
+            let y = Math.abs(y);
         }
-        var int sum, shiftedX, j;
-        let sum = 0, j = 0;
+        let sum = 0;
+        let j = 0;
         let shiftedX = x;
         while (j < 16) {
-            if (bit(y, j)) {
-                sum = sum + shiftedX;
+            if (Math.bit(y, j)) {
+                let sum = sum + shiftedX;
             }
-            shiftedX = shiftedX + shiftedX;
+            let shiftedX = shiftedX + shiftedX;
+            let j = j + 1;
         }
         return sum;
     }
@@ -69,33 +72,32 @@ class Math {
      *  the Jack expressions x/y and divide(x,y) return the same value.
      */
     function int divide(int x, int y) {
+        var int q;
         if (y > x) {
             return 0;
         }
-        var int q;
-        let q = divide(x, 2 * y);
-        if (x - ((2 * q) * y) < y) {
-            return 2 * q;
+        let q = Math.divide(x, y + y);
+        if ((x - ((q + q) * y)) < y) {
+            return (q + q);
         }
         else {
-            return (2 * q) + 1;
+            return ((q + q) + 1);
         }
     }
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
-        var int y, j, temp, tempSquared;
+        var int y, j, temp;
         let y = 0;
         let j = (16 / 2) - 1;
         while ((j > 0) | (j = 0)) {
-            let temp = (y + twoToThe[j]);
-            let tempSquared = temp * temp;
-            if (((tempSquared < x) | (tempSquared = x)) & (tempSquared > 0)) {
+            let temp = (y + twoToThe[j]) * (y + twoToThe[j])
+            if ((temp < (x + 1)) & (temp > 0)) {
                 let y = y + twoToThe[j];
             }
-            let j = j + 1;
+            let j = j - 1;
         }
-        return;
+        return y;
     }
 
     /** Returns the greater number. */
