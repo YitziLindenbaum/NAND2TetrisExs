@@ -1,0 +1,234 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Screen.jack
+
+/**
+ * A library of functions for displaying graphics on the screen.
+ * The Hack physical screen consists of 512 rows (indexed 0..511, top to bottom)
+ * of 256 pixels each (indexed 0..255, left to right). The top left pixel on 
+ * the screen is indexed (0,0).
+ */
+class Screen {
+    static boolean current_color;
+    static Array twoToThe;
+
+    /** Initializes the Screen. */
+    function void init() {
+        var int i, curr;
+        let current_color = true;
+        let twoToThe = Array.new(16);
+        let i = 0;
+        let curr = 1;
+        while (i < 16) {
+            let twoToThe[i] = curr;
+            let curr = curr * 2;
+            let i = i + 1;
+        }
+        return;
+    }
+
+    /** Erases the entire screen. */
+    function void clearScreen() {
+        var int i, j;
+        var boolean temp_color;
+        let i = 0;
+        let temp_color = current_color;
+        let current_color = false;
+        while (i < 512) {
+            let j = 0;
+            while (j < 256) {
+                do Screen.drawPixel(i, j);
+                let j = j + 1;
+            }
+            let i = i + 1;
+        }
+        let current_color = temp_color;
+        return;
+    }
+
+    /** Sets the current color, to be used for all subsequent drawXXX commands.
+     *  Black is represented by true, white by false. */
+    function void setColor(boolean b) {
+        let current_color = b;
+        return;
+    }
+
+    /** Draws the (x,y) pixel, using the current color. */
+    function void drawPixel(int x, int y) {
+        var int one_d_cell, bit_loc, quotient, pixel_content, mask;
+        let quotient = Math.divide(x, 16);
+        let bit_loc = x - (quotient * 16);
+        let one_d_cell = 16384 + (y * 32) + quotient;
+        let pixel_content = Memory.peek(one_d_cell);
+        if (current_color) { // Current Color is Black, pixel should be 1
+            let pixel_content = pixel_content | twoToThe[bit_loc];
+        }
+        else { // Current Color is White, pixel should be 0; AND(pixel_content, XOR(2^bit_loc, 1111..1))
+            let pixel_content = pixel_content & (((~twoToThe[bit_loc]) & (-32767)) | (twoToThe[bit_loc] & 0));
+        }
+        do Memory.poke(one_d_cell, pixel_content);
+        return;
+    }
+
+    /** Draws a horizontal line in an optimized manner */
+    function void drawHorizontalLine(int x1, int x2, int y) {
+        var int bound, left, right, quotient, mod, yTimes32, pixel_content, i, address, mask;
+        let yTimes32 = y * 32;
+        if (x1 = x2) {
+            do Screen.drawPixel(x1, y);
+        }
+        else {
+            /* Determine which x point is on the left and which is on the right */
+            if (x1 < x2) {
+                let left = x1;
+                let bound = x2;
+            }
+            else {
+                let left = x2;
+                let bound = x1;
+            }
+
+            let quotient = left / 16;
+            let mod = left - (quotient * 16);
+            if (mod > 0) {
+                let pixel_content = Memory.peek(16384 + yTimes32 + quotient);
+                if (current_color) { // Current Color is Black, pixel should be 1
+                    let i = mod;
+                    while (i < 16) {
+                        let pixel_content = pixel_content | twoToThe[i];
+                        let i = i + 1;
+                    }
+                }
+                else { // Current Color is White, pixel should be 0; AND(pixel_content, XOR(2^bit_loc, 1111..1))
+                    let mask = 0;
+                    let i = 0;
+                    while (i < mod) {
+                        let mask = mask + twoToThe[i];
+                        let i = i + 1;
+                    }
+                    let pixel_content = pixel_content & mask;
+                }
+                do Memory.poke(16384 + yTimes32 + quotient, pixel_content);
+                let left = left + (16 - mod);
+            }
+
+            /* All of the next 16 pixels appear in the same word and need to be colored */
+            while ((left + 16) < bound) {
+                let address = 16384 + yTimes32 + (left / 16);
+                let pixel_content = Memory.peek(address);
+                if (current_color) { // Current Color is Black
+                    do Memory.poke(address, pixel_content | -1);
+                }
+                else { // Current Color is White
+                    do Memory.poke(address, 0);
+                }
+
+                let left = left + 16;
+            }
+
+            /* Between 1-15 pixels in the same word need to be colored */
+            if (left < bound) {
+                let i = 0;
+                let address = 16384 + yTimes32 + (left / 16);
+                let pixel_content = Memory.peek(address);
+                if (current_color) { // Current Color is Black, pixel should be 1
+                    while (i < (bound - left + 1)) {
+                        let pixel_content = pixel_content | twoToThe[i];
+                        let i = i + 1;
+                    }
+                }
+                else { // Current Color is White, pixel should be 0; AND(pixel_content, XOR(2^bit_loc, 1111..1))
+                    let mask = 0;
+                    let i = (bound - left + 1);
+                    while (i < 16) {
+                        let mask = mask + twoToThe[i];
+                        let i = i + 1;
+                    }
+                    let pixel_content = pixel_content & mask;
+                }
+                do Memory.poke(address, pixel_content);
+            }
+        }
+        return;
+    }
+
+    /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
+    function void drawLine(int x1, int y1, int x2, int y2) {
+        if (y1 = y2) {
+            do Screen.drawHorizontalLine(x1, x2, y1);
+        }
+        else {
+            if (x1 < x2) {
+                do Screen.drawLineHelper(x1, y1, x2 - x1, y2 - y1);
+            }
+            else {
+                do Screen.drawLineHelper(x2, y2, x1 - x2, y1 - y2);
+            }
+        }
+        return;
+    }
+
+    /** Draws a line according to the algo in figure 12.8 in the book */
+    function void drawLineHelper(int x, int y, int dx, int dy) {
+        var int a, b, adyMinusbdx;
+        var boolean neg_flag;
+        let neg_flag = false;
+        let a = 0;
+        let b = 0;
+        let adyMinusbdx = 0;
+        if (dy < 0) {
+            let neg_flag = true;
+            let dy = Math.abs(dy);
+        }
+        while (((a < dx) | (a = dx)) & ((b < dy) | (b = dy))) {
+            if (neg_flag) {
+                do Screen.drawPixel(x + a, y - b);
+            }
+            else {
+                do Screen.drawPixel(x + a, y + b);
+            }
+            if (adyMinusbdx < 0) {
+                let a = a + 1;
+                let adyMinusbdx = adyMinusbdx + dy;
+            }
+            else {
+                let b = b + 1;
+                let adyMinusbdx = adyMinusbdx - dx;
+            }
+        }
+        return;
+    }
+
+    /** Draws a filled rectangle whose top left corner is (x1, y1)
+     * and bottom right corner is (x2,y2), using the current color. */
+    function void drawRectangle(int x1, int y1, int x2, int y2) {
+        var int i;
+        let i = y1;
+        while (i < y2) {
+            do Screen.drawHorizontalLine(x1, x2, i);
+            let i = i + 1;
+        }
+        return;
+    }
+
+    /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
+    function void drawCircle(int x, int y, int r) {
+        var int dy, ax, ay, bx, rad_thing;
+        if ((r < 1) | (r > 181)) {
+            do Sys.error(1);
+        }
+        else {
+            let dy = -r;
+            while (dy < (r + 1)) {
+                let rad_thing = Math.sqrt((r * r) - (dy * dy));
+                let ax = x - rad_thing;
+                let ay = y + dy;
+                let bx = x + rad_thing;
+                do Screen.drawHorizontalLine(ax, bx, ay);
+                let dy = dy + 1;
+            }
+        }
+        return;
+    }
+}

@@ -76,7 +76,7 @@ class String {
 
     method int modulo(x, y) {
         var int quotient;
-        let quotient = divide(x, y);
+        let quotient = Math.divide(x, y);
         return x - (quotient * y);
     }
 
