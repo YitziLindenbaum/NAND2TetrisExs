@@ -36,14 +36,9 @@ class Math {
     /** Returns the absolute value of x. */
     function int abs(int x) {
         if (x < 0) {
-            x = -x;
+            return -x;
         }
         return x;
-    }
-
-    /** Checks if the j'th bit of x is 1 or 0 */
-    method int bit(int x, int j) {
-        return (x & twoToThe[j]);
     }
 
     /** Returns the product of x and y.
@@ -52,28 +47,18 @@ class Math {
      *  the Jack expressions x*y and multiply(x,y) return the same value.
      */
     function int multiply(int x, int y) {
-        var boolean x_is_neg, y_is_neg;
-        let x_is_neg = x < 0;
-        let y_is_neg = y < 0;
-        x = abs(x);
-        y = abs(y);
-
         var int sum, shiftedX, j;
-        let sum = 0, j = 0;
+        let sum = 0;
+        let j = 0;
         let shiftedX = x;
         while (j < 16) {
-            if (bit(y, j)) {
-                sum = sum + shiftedX;
+            if (y & twoToThe[j]) {
+                let sum = sum + shiftedX;
             }
-            shiftedX = shiftedX + shiftedX;
+            let shiftedX = shiftedX + shiftedX;
+            let j = j + 1;
         }
-
-        if ((x_is_neg & ~y_is_neg) | (~x_is_neg & y_is_neg)) {
-            return -sum;
-        }
-        else {
-            return sum;
-        }
+        return sum;
     }
 
     /** Performs division on two positive numbers */
@@ -82,8 +67,8 @@ class Math {
         if (y > x) {
             return 0;
         }
-        let q = divide(x, y + y);
-        if (x - ((q + q) * y) < y) {
+        let q = Math.divideHelper(x, y + y);
+        if ((x - ((q + q) * y)) < y) {
             return q + q;
         }
         else {
@@ -103,9 +88,6 @@ class Math {
         let y_is_neg = y < 0;
         let x = Math.abs(x);
         let y = Math.abs(y);
-        if (y = 0) {
-            call Sys.error(1);
-        }
         let q = Math.divideHelper(x, y);
         if ((x_is_neg & ~y_is_neg) | (~x_is_neg & y_is_neg)) {
             return -q;
@@ -118,23 +100,20 @@ class Math {
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
         var int y, j, temp, tempSquared;
-        if (x < 0) {
-            call Sys.error(1);
-        }
         if (x = 0) {
             return 0;
         }
         let y = 0;
-        let j = 7; // 16/2 - 1
-        while ((j > 0) | (j = 0)) {
-            let temp = (y + twoToThe[j]);
+        let j = 0;
+        while (j < 8) {
+            let temp = y + twoToThe[7 - j];
             let tempSquared = temp * temp;
             if (((tempSquared < x) | (tempSquared = x)) & (tempSquared > 0)) {
-                let y = y + twoToThe[j];
+                let y = temp;
             }
             let j = j + 1;
         }
-        return;
+        return y;
     }
 
     /** Returns the greater number. */
