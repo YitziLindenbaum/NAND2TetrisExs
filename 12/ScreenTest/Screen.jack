@@ -11,11 +11,12 @@
  */
 class Screen {
     static boolean current_color;
-    static Array twoToThe;
+    static Array twoToThe, screen;
 
     /** Initializes the Screen. */
     function void init() {
         let current_color = true;
+        let screen = 16384;
         let twoToThe = Array.new(16);
         let twoToThe[0] = 1;
         let twoToThe[1] = 2;
@@ -49,17 +50,15 @@ class Screen {
 
     /** Erases the entire screen. */
     function void clearScreen() {
-        var int i, j;
+        var int i, j, address;
         var boolean temp_color;
         let i = 0;
         let temp_color = current_color;
         let current_color = false;
-        while (i < 512) {
-            let j = 0;
-            while (j < 256) {
-                do Screen.drawPixel(i, j);
-                let j = j + 1;
-            }
+        let address = 16384;
+        while (i < 8192) {
+            let screen[address + j] = 0;
+            let address = address + 32;
             let i = i + 1;
         }
         let current_color = temp_color;
@@ -75,99 +74,68 @@ class Screen {
 
     /** Draws the (x,y) pixel, using the current color. */
     function void drawPixel(int x, int y) {
-        var int one_d_cell, bit_loc, quotient, pixel_content, mask;
-        let quotient = Math.divide(x, 16);
+        var int address, bit_loc, quotient, mask;
+        let quotient = x / 16;
         let bit_loc = x & 15; // x % 16 == x & 0..01111
-        let one_d_cell = 16384 + Screen.multiplyBy32(y) + quotient;
-        let pixel_content = Memory.peek(one_d_cell);
+        let address = Screen.multiplyBy32(y) + quotient;
         if (current_color) { // Current Color is Black, pixel should be 1
-            let pixel_content = pixel_content | twoToThe[bit_loc];
+            let screen[address] = screen[address] | twoToThe[bit_loc];
         }
-        else { // Current Color is White, pixel should be 0; AND(pixel_content, XOR(2^bit_loc, 1111..1))
-            let pixel_content = pixel_content & (((~twoToThe[bit_loc]) & -1) | (twoToThe[bit_loc] & 0));
+        else { // Current Color is White, pixel should be 0
+            let screen[address] = screen[address] & ~twoToThe[bit_loc];
         }
-        do Memory.poke(one_d_cell, pixel_content);
         return;
     }
 
     /** Draws a horizontal line in an optimized manner */
     function void drawHorizontalLine(int x1, int x2, int y) {
-        var int bound, left, right, quotient, mod, yTimes32, pixel_content, i, address, mask;
+        var int bound, left, right, quotient, left_mod, yTimes32, i, address, mask;
         let yTimes32 = Screen.multiplyBy32(y);
+
         if (x1 = x2) {
             do Screen.drawPixel(x1, y);
+            return;
         }
         else {
             /* Determine which x point is on the left and which is on the right */
-            if (x1 < x2) {
-                let left = x1;
-                let bound = x2;
-            }
-            else {
-                let left = x2;
-                let bound = x1;
-            }
-
+            let left = Math.min(x1, x2);
+            let bound = Math.max(x1, x2);
             let quotient = left / 16;
-            let mod = left - (quotient * 16);
-            if (mod > 0) {
-                let pixel_content = Memory.peek(16384 + yTimes32 + quotient);
+            let left_mod = left & 15;
+            let address = yTimes32 + quotient;
+            if (left_mod > 0) {
                 if (current_color) { // Current Color is Black, pixel should be 1
-                    let i = mod;
-                    while (i < 16) {
-                        let pixel_content = pixel_content | twoToThe[i];
+                    let i = left_mod;
+                    while ((i < 16) & ((left + i - left_mod) < (bound + 1))) { // TODO
+                        let screen[address] = screen[address] | twoToThe[i];
                         let i = i + 1;
                     }
                 }
                 else { // Current Color is White, pixel should be 0; AND(pixel_content, XOR(2^bit_loc, 1111..1))
-                    let mask = 0;
-                    let i = 0;
-                    while (i < mod) {
-                        let mask = mask + twoToThe[i];
-                        let i = i + 1;
-                    }
-                    let pixel_content = pixel_content & mask;
+                    let mask = twoToThe[left_mod] - 1;
+                    let screen[address] = screen[address] & mask;
                 }
-                do Memory.poke(16384 + yTimes32 + quotient, pixel_content);
-                let left = left + (16 - mod);
+                let left = left + (16 - left_mod);
             }
 
             /* All of the next 16 pixels appear in the same word and need to be colored */
             while ((left + 16) < bound) {
-                let address = 16384 + yTimes32 + (left / 16);
-                let pixel_content = Memory.peek(address);
+                let address = yTimes32 + (left / 16);
                 if (current_color) { // Current Color is Black
-                    do Memory.poke(address, pixel_content | -1);
+                    let screen[address] = screen[address] | -1;
                 }
                 else { // Current Color is White
-                    do Memory.poke(address, 0);
+                    let screen[address] = 0;
                 }
 
                 let left = left + 16;
             }
 
             /* Between 1-15 pixels in the same word need to be colored */
-            if (left < bound) {
-                let i = 0;
-                let address = 16384 + yTimes32 + (left / 16);
-                let pixel_content = Memory.peek(address);
-                if (current_color) { // Current Color is Black, pixel should be 1
-                    while (i < (bound - left + 1)) {
-                        let pixel_content = pixel_content | twoToThe[i];
-                        let i = i + 1;
-                    }
+            while (left < bound) {
+                    do Screen.drawPixel(left, y);
+                    let left = left + 1;
                 }
-                else { // Current Color is White, pixel should be 0; AND(pixel_content, XOR(2^bit_loc, 1111..1))
-                    let mask = 0;
-                    let i = (bound - left + 1);
-                    while (i < 16) {
-                        let mask = mask + twoToThe[i];
-                        let i = i + 1;
-                    }
-                    let pixel_content = pixel_content & mask;
-                }
-                do Memory.poke(address, pixel_content);
-            }
         }
         return;
     }
@@ -233,18 +201,16 @@ class Screen {
 
     /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
     function void drawCircle(int x, int y, int r) {
-        var int dy, ax, ay, bx, rad_thing;
+        var int dy, rad_thing, rSquared;
         if ((r < 1) | (r > 181)) {
             do Sys.error(1);
         }
         else {
             let dy = -r;
+            let rSquared = r * r;
             while (dy < (r + 1)) {
-                let rad_thing = Math.sqrt((r * r) - (dy * dy));
-                let ax = x - rad_thing;
-                let ay = y + dy;
-                let bx = x + rad_thing;
-                do Screen.drawHorizontalLine(ax, bx, ay);
+                let rad_thing = Math.sqrt(rSquared - (dy * dy));
+                do Screen.drawHorizontalLine(x - rad_thing, x + rad_thing, y + dy);
                 let dy = dy + 1;
             }
         }
