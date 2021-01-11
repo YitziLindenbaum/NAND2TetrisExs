@@ -10,6 +10,7 @@
 class Math {
 
     static Array twoToThe;
+    static int twoQY;
 
     /** Initializes the library. */
     function void init() {
@@ -65,10 +66,14 @@ class Math {
     function int divideHelper(int x, int y) {
         var int q;
         if (y > x) {
+            let twoQY = 0;
             return 0;
         }
         let q = Math.divideHelper(x, y + y);
-        if ((x - ((q + q) * y)) < y) {
+        if ((q & 1) = 1) {
+            let twoQY = twoQY + y + y;
+        }
+        if ((x - twoQY) < y) {
             return q + q;
         }
         else {

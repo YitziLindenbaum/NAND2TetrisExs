@@ -195,6 +195,8 @@ if-goto IF_TRUE0
 goto IF_FALSE0
 label IF_TRUE0
 push constant 0
+pop static 1
+push constant 0
 return
 label IF_FALSE0
 push argument 0
@@ -203,31 +205,42 @@ push argument 1
 add
 call Math.divideHelper 2
 pop local 0
-push argument 0
 push local 0
-push local 0
-add
-push argument 1
-call Math.multiply 2
-sub
-push argument 1
-lt
+push constant 1
+and
+push constant 1
+eq
 if-goto IF_TRUE1
 goto IF_FALSE1
 label IF_TRUE1
+push static 1
+push argument 1
+add
+push argument 1
+add
+pop static 1
+label IF_FALSE1
+push argument 0
+push static 1
+sub
+push argument 1
+lt
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
 push local 0
 push local 0
 add
 return
-goto IF_END1
-label IF_FALSE1
+goto IF_END2
+label IF_FALSE2
 push local 0
 push local 0
 add
 push constant 1
 add
 return
-label IF_END1
+label IF_END2
 function Math.divide 3
 push argument 0
 push constant 0
