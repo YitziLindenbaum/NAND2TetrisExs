@@ -6,7 +6,7 @@
 /**
  * A library of functions for displaying graphics on the screen.
  * The Hack physical screen consists of 512 rows (indexed 0..511, top to bottom)
- * of 256 pixels each (indexed 0..255, left to right). The top left pixel on 
+ * of 256 pixels each (indexed 0..255, left to right). The top left pixel on
  * the screen is indexed (0,0).
  */
 class Screen {
@@ -15,17 +15,36 @@ class Screen {
 
     /** Initializes the Screen. */
     function void init() {
-        var int i, curr;
         let current_color = true;
         let twoToThe = Array.new(16);
-        let i = 0;
-        let curr = 1;
-        while (i < 16) {
-            let twoToThe[i] = curr;
-            let curr = curr * 2;
-            let i = i + 1;
-        }
+        let twoToThe[0] = 1;
+        let twoToThe[1] = 2;
+        let twoToThe[2] = 4;
+        let twoToThe[3] = 8;
+        let twoToThe[4] = 16;
+        let twoToThe[5] = 32;
+        let twoToThe[6] = 64;
+        let twoToThe[7] = 128;
+        let twoToThe[8] = 256;
+        let twoToThe[9] = 512;
+        let twoToThe[10] = 1024;
+        let twoToThe[11] = 2048;
+        let twoToThe[12] = 4096;
+        let twoToThe[13] = 8192;
+        let twoToThe[14] = 16384;
+        let twoToThe[15] = 16384 + 16384;
         return;
+    }
+
+    function int multiplyBy32(int x) {
+        var int shiftedX, j;
+        let j = 0;
+        let shiftedX = x;
+        while (j < 5) {
+            let shiftedX = shiftedX + shiftedX;
+            let j = j + 1;
+        }
+        return shiftedX;
     }
 
     /** Erases the entire screen. */
@@ -58,14 +77,14 @@ class Screen {
     function void drawPixel(int x, int y) {
         var int one_d_cell, bit_loc, quotient, pixel_content, mask;
         let quotient = Math.divide(x, 16);
-        let bit_loc = x - (quotient * 16);
-        let one_d_cell = 16384 + (y * 32) + quotient;
+        let bit_loc = x & 15; // x % 16 == x & 0..01111
+        let one_d_cell = 16384 + Screen.multiplyBy32(y) + quotient;
         let pixel_content = Memory.peek(one_d_cell);
         if (current_color) { // Current Color is Black, pixel should be 1
             let pixel_content = pixel_content | twoToThe[bit_loc];
         }
         else { // Current Color is White, pixel should be 0; AND(pixel_content, XOR(2^bit_loc, 1111..1))
-            let pixel_content = pixel_content & (((~twoToThe[bit_loc]) & (-32767)) | (twoToThe[bit_loc] & 0));
+            let pixel_content = pixel_content & (((~twoToThe[bit_loc]) & -1) | (twoToThe[bit_loc] & 0));
         }
         do Memory.poke(one_d_cell, pixel_content);
         return;
@@ -74,7 +93,7 @@ class Screen {
     /** Draws a horizontal line in an optimized manner */
     function void drawHorizontalLine(int x1, int x2, int y) {
         var int bound, left, right, quotient, mod, yTimes32, pixel_content, i, address, mask;
-        let yTimes32 = y * 32;
+        let yTimes32 = Screen.multiplyBy32(y);
         if (x1 = x2) {
             do Screen.drawPixel(x1, y);
         }

@@ -87,10 +87,8 @@ push constant 16
 call Math.divide 2
 pop local 2
 push argument 0
-push local 2
-push constant 16
-call Math.multiply 2
-sub
+push constant 15
+and
 pop local 1
 push constant 16384
 push argument 1
@@ -124,7 +122,7 @@ add
 pop pointer 1
 push that 0
 not
-push constant 32767
+push constant 1
 neg
 and
 push local 1
