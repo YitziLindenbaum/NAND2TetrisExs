@@ -294,7 +294,9 @@ class CompilationEngine:
     def compile_expression(self):
         """Compiles an expression"""
         self.compile_term()
-        if self.tokenizer.symbol() in OPS.keys():
+        while self.tokenizer.symbol() in OPS.keys():  # todo changed to
+            # while to handle expression like x+y+z, check it won't mess
+            # anything up
             operator = self._get_next_token()  # binary operator
             self.compile_term()  # Leaves the second operand on top of the stack
             self.vm_writer.write_arithmetic(OPS[operator])
