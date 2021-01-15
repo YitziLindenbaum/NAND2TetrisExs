@@ -103,27 +103,47 @@ class String {
         return v;
     }
 
-    method String intToString(int val) {
-        var int last_digit, quotient, temp;
+    /** Sets this string to hold a representation of the given value. */
+    method void setInt(int val) {
+        var int last_digit, quotient, temp, actual_len;
+        var boolean is_neg;
         var char c;
-        var String output;
+        let actual_len = 5;
         let temp = val;
-        let output = String.new(5); // No number can be larger than 32767
+        let is_neg = false;
         if (val < 0) {
-            do Sys.error(1);
+            let is_neg = true;
+            let temp = -val;
+            let actual_len = 6;
         }
+        if (temp < 10000) {
+            let actual_len = actual_len - 1;
+        }
+        if (temp < 1000) {
+            let actual_len = actual_len - 1;
+        }
+        if (temp < 100) {
+            let actual_len = actual_len - 1;
+        }
+        if (temp < 10) {
+            let actual_len = actual_len - 1;
+        }
+        if (max_len < (actual_len + 1)) {
+            let string = Array.new(actual_len);
+            let max_len = actual_len;
+        }
+        let current_len = 0;
         while (temp > 0) {
             let quotient = temp / 10;
             let last_digit = temp - (quotient * 10);
-            do output.appendChar(last_digit + 48);
+            let string[actual_len - current_len - 1] = last_digit + 48;
+            let current_len = current_len + 1;
             let temp = quotient;
         }
-        return output;
-    }
-
-    /** Sets this string to hold a representation of the given value. */
-    method void setInt(int val) {
-        let string = intToString(val);
+        if (is_neg) {
+            let string[0] = 45;
+            let current_len = current_len + 1;
+        }
         return;
     }
 
