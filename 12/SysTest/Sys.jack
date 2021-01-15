@@ -45,7 +45,7 @@ class Sys {
     /** Displays the given error code in the form "ERR<errorCode>",
      *  and halts the program's execution. */
     function void error(int errorCode) {
-        do Output.printString("ERR");
+        do Output.printString("ERR"); // todo
         do Output.printInt(errorCode);
         do Sys.halt();
         return;

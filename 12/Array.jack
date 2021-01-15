@@ -14,7 +14,7 @@
 class Array {
 
     /** Constructs a new Array of the given size. */
-    function Array new(int size) {
+    constructor Array new(int size) {
         if (size > 0) {
             return Memory.alloc(size);
         }
