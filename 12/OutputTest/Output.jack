@@ -17,12 +17,13 @@
 class Output {
 
     // Character map for displaying characters
-    static Array charMaps;
+    static Array charMaps, screen;
     static int row, col, max_row, max_col, oneZero;
 
     /** Initializes the screen, and locates the cursor at the screen's top-left. */
     function void init() {
         var int i, j;
+        let screen = 16384;
         let row = 0;
         let col = 0;
         let max_col = 64;
@@ -242,18 +243,16 @@ class Output {
         }
         let bitmap = Output.getMap(c);
         let lsb = col & 1;
-        let quotient = (col / 2) + 16384;
+        let quotient = col / 2;
         let address = Output.multiplyBy32(row * 11) + quotient;
         let i = 0;
         while (i < 11) {
-            let pixel_content = Memory.peek(address);
             if (lsb = 0) {
-                let pixel_content = pixel_content & 255 | bitmap[i]; // Left side
+                let screen[address] = screen[address] & 255 | bitmap[i]; // Left side
             }
             else {
-                let pixel_content = pixel_content & (255 & -1) | Output.multiplyBy256(bitmap[i]); // Right side
+                let screen[address] = screen[address] & (255 & -1) | Output.multiplyBy256(bitmap[i]); // Right side
             }
-            do Memory.poke(address, pixel_content);
             let address = address + 32;
             let i = i + 1;
         }

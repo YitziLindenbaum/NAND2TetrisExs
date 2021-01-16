@@ -1,16 +1,18 @@
 function Output.init 2
-push constant 0
+push constant 16384
 pop static 1
 push constant 0
 pop static 2
-push constant 64
-pop static 4
-push constant 23
+push constant 0
 pop static 3
+push constant 64
+pop static 5
+push constant 23
+pop static 4
 push constant 32640
 push constant 32640
 add
-pop static 5
+pop static 6
 call Output.initMap 0
 pop temp 0
 push constant 0
@@ -1489,7 +1491,7 @@ push that 0
 return
 function Output.moveCursor 0
 push argument 0
-push static 3
+push static 4
 lt
 push argument 0
 push constant 1
@@ -1497,7 +1499,7 @@ neg
 gt
 and
 push argument 1
-push static 4
+push static 5
 lt
 and
 push argument 1
@@ -1509,41 +1511,41 @@ if-goto IF_TRUE0
 goto IF_FALSE0
 label IF_TRUE0
 push argument 0
-pop static 1
-push argument 1
 pop static 2
+push argument 1
+pop static 3
 push constant 32
 call Output.printChar 1
 pop temp 0
 label IF_FALSE0
-push static 2
+push static 3
 push constant 0
 gt
 if-goto IF_TRUE1
 goto IF_FALSE1
 label IF_TRUE1
-push static 2
+push static 3
 push constant 1
 sub
-pop static 2
+pop static 3
 goto IF_END1
 label IF_FALSE1
 push constant 63
-pop static 2
-push static 1
+pop static 3
+push static 2
 push constant 0
 gt
 if-goto IF_TRUE2
 goto IF_FALSE2
 label IF_TRUE2
-push static 1
+push static 2
 push constant 1
 sub
-pop static 1
+pop static 2
 goto IF_END2
 label IF_FALSE2
 push constant 22
-pop static 1
+pop static 2
 label IF_END2
 label IF_END1
 push constant 0
@@ -1620,17 +1622,15 @@ label IF_FALSE1
 push argument 0
 call Output.getMap 1
 pop local 0
-push static 2
+push static 3
 push constant 1
 and
 pop local 5
-push static 2
+push static 3
 push constant 2
 call Math.divide 2
-push constant 16384
-add
 pop local 4
-push static 1
+push static 2
 push constant 11
 call Math.multiply 2
 call Output.multiplyBy32 1
@@ -1645,16 +1645,20 @@ push constant 11
 lt
 not
 if-goto WHILE_END0
-push local 2
-call Memory.peek 1
-pop local 1
 push local 5
 push constant 0
 eq
 if-goto IF_TRUE2
 goto IF_FALSE2
 label IF_TRUE2
-push local 1
+push local 2
+push static 1
+add
+push local 2
+push static 1
+add
+pop pointer 1
+push that 0
 push constant 255
 and
 push local 3
@@ -1663,10 +1667,20 @@ add
 pop pointer 1
 push that 0
 or
-pop local 1
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
 goto IF_END2
 label IF_FALSE2
-push local 1
+push local 2
+push static 1
+add
+push local 2
+push static 1
+add
+pop pointer 1
+push that 0
 push constant 255
 push constant 1
 neg
@@ -1679,12 +1693,11 @@ pop pointer 1
 push that 0
 call Output.multiplyBy256 1
 or
-pop local 1
-label IF_END2
-push local 2
-push local 1
-call Memory.poke 2
 pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+label IF_END2
 push local 2
 push constant 32
 add
@@ -1695,16 +1708,16 @@ add
 pop local 3
 goto WHILE_EXP0
 label WHILE_END0
-push static 2
+push static 3
 push constant 63
 lt
 if-goto IF_TRUE3
 goto IF_FALSE3
 label IF_TRUE3
-push static 2
+push static 3
 push constant 1
 add
-pop static 2
+pop static 3
 goto IF_END3
 label IF_FALSE3
 call Output.println 0
@@ -1749,47 +1762,47 @@ pop temp 0
 push constant 0
 return
 function Output.println 0
-push static 1
+push static 2
 push constant 22
 lt
 if-goto IF_TRUE0
 goto IF_FALSE0
 label IF_TRUE0
-push static 1
+push static 2
 push constant 1
 add
-pop static 1
+pop static 2
 goto IF_END0
 label IF_FALSE0
 push constant 0
-pop static 1
+pop static 2
 label IF_END0
 push constant 0
-pop static 2
+pop static 3
 push constant 0
 return
 function Output.backSpace 0
-push static 2
+push static 3
 push constant 0
 gt
 if-goto IF_TRUE0
 goto IF_FALSE0
 label IF_TRUE0
-push static 1
 push static 2
+push static 3
 push constant 1
 sub
 call Output.moveCursor 2
 pop temp 0
 goto IF_END0
 label IF_FALSE0
-push static 1
+push static 2
 push constant 0
 gt
 if-goto IF_TRUE1
 goto IF_FALSE1
 label IF_TRUE1
-push static 1
+push static 2
 push constant 1
 sub
 push constant 63
