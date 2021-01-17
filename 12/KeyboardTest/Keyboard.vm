@@ -13,6 +13,9 @@ return
 function Keyboard.readChar 2
 push constant 0
 pop local 1
+push constant 0
+call Output.printChar 1
+pop temp 0
 label WHILE_EXP0
 push local 1
 push constant 0
@@ -44,6 +47,8 @@ push that 0
 pop local 1
 goto WHILE_EXP1
 label WHILE_END1
+call Output.backSpace 0
+pop temp 0
 push local 0
 call Output.printChar 1
 pop temp 0
